@@ -2,7 +2,13 @@
 __pycache__/
 *.py[cod]
 *$py.class
- 
+
+
+# Session files 
+*.session
+*.session-journal
+
+
 # C extensions
 *.so
  

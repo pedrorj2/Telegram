@@ -1,5 +1,5 @@
-<h3 align="center">Aprendizaje autónomo en ingeniería mediante actividades gamificadas en Telegram</h3>
-<div align="center">
+<h3><ins>Aprendizaje autónomo en ingeniería mediante actividades gamificadas en Telegram</ins></h3>
+<div>
   
   <!-- Título centrado -->
   <h4>👨‍🎓 Desarrollado por Pedro Rodríguez Jiménez</h4>
@@ -8,7 +8,6 @@
   <a href="https://www.linkedin.com/in/pedro-rjimenez/">
     <img src="https://img.shields.io/badge/pedro__rjcl-blue.svg?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn Badge">
   </a>
-
 </div>
 
 <br>
@@ -25,14 +24,14 @@
 
 <br>
 
-## Documentación
+### <ins>Documentación</ins>
 
  - [Documentación de Telethon](https://docs.telethon.dev/en/stable/)
  - [Memoria del proyecto](https://www.overleaf.com/read/nvbqkrzspbjp#ad7e05)
 
 <br>
 
-## Instalación Python y Telethon
+### <ins>Instalación Python y Telethon</ins>
 
 El back-end del bot está escrito en **Python (versión 3.12.2)**.
 
@@ -55,7 +54,7 @@ pip install telethon
 
 <br>
 
-## Clonar el repositorio
+### <ins>Clonar el repositorio</ins>
 
 Debemos empezar por clonar el repositorio.
 
@@ -75,7 +74,7 @@ Al hacerlo nos saldrá una pestaña donde nos dice de abrir el repositorio, lo a
 
 <br>
 
-## Despliegue del bot
+### <ins>Despliegue del bot</ins>
 
 
 

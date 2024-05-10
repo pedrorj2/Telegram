@@ -3,11 +3,12 @@ from telethon.tl.custom import Button
 import os
 import re
 from datetime import datetime
+from config import api_id, api_hash, bot_token
 
-# Configuración de tu API de Telegram
-api_id = '28092530'
-api_hash = 'dcedc3ea5fbfb53690f7d80873e0d5d6'
-bot_token = '7054644239:AAEW7CeuGvshPfdM_iN_LQFFdwmTgr_IiHI'
+# Configuración de tu API de Telegram (lo tengo en un segundo archivo que no subo)
+# api_id = ' '
+# api_hash = ' '
+# bot_token = ' '
 
 # Iniciar el cliente de Telegram
 client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)

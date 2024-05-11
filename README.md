@@ -1,4 +1,4 @@
-<h2><ins>Aprendizaje autónomo en ingeniería mediante actividades gamificadas en Telegram</ins></h2>
+<h1><ins>Aprendizaje autónomo en ingeniería mediante actividades gamificadas en Telegram</ins></h1>
 
 - 🗂️ Este repositorio recoge los avances y códigos del [Proyecto IE24.1401 de Innovación Educativa](https://innovacioneducativa.upm.es/proyectos-ie/informacion?anyo=2023-2024&id=1160)
 

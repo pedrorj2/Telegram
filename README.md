@@ -6,7 +6,7 @@
   
   <!-- Badge de LinkedIn centrado -->
   <a href="https://www.linkedin.com/in/pedro-rjimenez/">
-    <img src="https://img.shields.io/badge/pedro__rjcl-blue.svg?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn Badge">
+    <!--<img src="https://img.shields.io/badge/pedro__rjcl-blue.svg?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn Badge">-->
   </a>
 </div>
 

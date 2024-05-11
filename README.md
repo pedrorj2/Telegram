@@ -33,7 +33,7 @@
 
 ### <ins>Instalación Python y Telethon</ins>
 
-El back-end del bot está escrito en **Python (versión 3.12.2)**.
+El back-end del bot está escrito en `Python (versión 3.12.2)`.
 
 Podemos comprobar si está instalado, ejecutandolo en la terminal/PowerShell: 
 
@@ -58,9 +58,9 @@ pip install telethon
 
 Debemos empezar por clonar el repositorio.
 
-Para ello abriremos Visual Code y pulsaremos **Ctrl + Shift + P**.
+Para ello abriremos Visual Code y pulsaremos `Ctrl + Shift + P`.
 
-Aquí en la barra de búsqueda habrá aparecido un ">". Escribimos **Git: Clone** y lo seleccionamos.
+Aquí en la barra de búsqueda del propio Visual Code habrá aparecido un ">". Con ello buscaremos la acción `Git: Clone` y la seleccionamos.
 
 Nos pedirá que escribamos el nombre del repositorio (o el URL), lo introducimos:
 
@@ -75,6 +75,22 @@ Al hacerlo nos saldrá una pestaña donde nos dice de abrir el repositorio, lo a
 <br>
 
 ### <ins>Despliegue del bot</ins>
+
+Una vez clonado y abierto el repositorio con Visual Code, debemos rellenar los datos de identificación de nuestro bot que podemos ver en las primeras líneas comentadas, hemos de rellenarlos y descomentar dichas variables.
+
+```bash
+# Configuración de tu API de Telegram
+# api_id = ' '
+# api_hash = ' '
+# bot_token = ' '
+```
+
+`api_id` y `api_hash` se obtienen creando una ¨Aplicación de Telegram¨ através de https://my.telegram.org/apps.
+
+`bot_token` lo obtenemos directamente de la aplicación de Telegram a través del Bot [@BotFather](https://t.me/BotFather).
+Para ello debemos crear un bot, elegir su nombre y con ello conseguiremos este `token to access the HTTP API`.
+
+Con esto, podemos ejecutar nuestro código y nuestro ordenador alojará el back-end del bot, mientras esté ejecutándose, nuestro bot responderá a las acciones, pero si cerramos el Visual Code, dejará de funcionar dicho bot hasta que lo volvamos a iniciar.
 
 
 

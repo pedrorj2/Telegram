@@ -3,6 +3,7 @@ from telethon.tl.custom import Button
 import os
 import re
 from datetime import datetime
+from config import api_id, api_hash, bot_token
 
 # Configuración de tu API de Telegram, la importo del archivo config.py
 # No es público por seguridad, sólo contiene estos tres datos de a continuación:
@@ -24,18 +25,6 @@ usuarios_activos = set()
 
 # Almacenar las respuestas de un usuario con mejor estructura
 respuestas_de_usuarios = {}
-
-# respuestas_de_usuarios = {
-#   user_id: {
-#     'tema1': {
-#       'pregunta1': [('respuesta1', 85.0), ('respuesta2', 50.0)],
-#       'pregunta2': [('respuesta1', 100.0)]
-#     },
-#     'tema2': {
-#       'pregunta1': [('respuesta1', 75.0)]
-#     }
-#   }
-# }
 
 # Función para obtener las preguntas desde el archivo
 def obtener_preguntas_desde_archivo(archivo):

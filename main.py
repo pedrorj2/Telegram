@@ -3,7 +3,6 @@ from telethon.tl.custom import Button
 import os
 import re
 from datetime import datetime
-from config import api_id, api_hash, bot_token
 
 # Configuración de tu API de Telegram, la importo del archivo config.py
 # No es público por seguridad, sólo contiene estos tres datos de a continuación:

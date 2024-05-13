@@ -1,12 +1,19 @@
+# Session files 
+*.session
+*.session-journal
+
+# config.py
+*config.py
+
+
+#############################################
+############# Useful .gitignore #############
+#############################################
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Session files 
-*.session
-*.session-journal
-*config.py
 
 # C extensions
 *.so

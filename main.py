@@ -3,11 +3,13 @@ from telethon.tl.custom import Button
 import os
 import re
 from datetime import datetime
+from config import api_id, api_hash, bot_token
 
-# Configuración de tu API de Telegram
-api_id = '28092530'
-api_hash = 'dcedc3ea5fbfb53690f7d80873e0d5d6'
-bot_token = '7054644239:AAEW7CeuGvshPfdM_iN_LQFFdwmTgr_IiHI'
+# Configuración de tu API de Telegram, la importo del archivo config.py
+# No es público por seguridad, sólo contiene estos tres datos de a continuación:
+# api_id = ' '
+# api_hash = ' '
+# bot_token = ''
 
 # Iniciar el cliente de Telegram
 client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
@@ -21,8 +23,20 @@ selecciones_pregunta = {}
 # Lista para mantener a los usuarios activos
 usuarios_activos = set()
 
-# Almacenar las respuestas de un usuario
+# Almacenar las respuestas de un usuario con mejor estructura
 respuestas_de_usuarios = {}
+
+# respuestas_de_usuarios = {
+#   user_id: {
+#     'tema1': {
+#       'pregunta1': [('respuesta1', 85.0), ('respuesta2', 50.0)],
+#       'pregunta2': [('respuesta1', 100.0)]
+#     },
+#     'tema2': {
+#       'pregunta1': [('respuesta1', 75.0)]
+#     }
+#   }
+# }
 
 # Función para obtener las preguntas desde el archivo
 def obtener_preguntas_desde_archivo(archivo):
@@ -74,29 +88,23 @@ async def lanzar_actividad(event):
     buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos_actividad]
     await event.respond('Elige un archivo de actividad:', buttons=buttons)
 
-@client.on(events.NewMessage(pattern='/respuestas'))
-async def ver_respuestas(event):
-    if event.sender.username != 'aeropedrax':
-        await event.respond("No tienes permiso para usar este comando.")
-        return
-
-    username = event.raw_text.split(' ')[1]
-    if username.startswith('@'):
-        username = username[1:]  # Remove '@' from username
-
-    try:
-        user = await client.get_entity(username)
-        user_id = user.id
-        if user_id in respuestas_de_usuarios:
-            respuesta_texto = ""  # Iniciar un string vacío para acumular las respuestas
-            for respuesta in respuestas_de_usuarios[user_id]:
-                respuesta_texto += respuesta + "\n\n"  # Añadir respuesta y dos saltos de línea
-            print(f"[ADMIN] Respuestas almacenadas para {username}:\n\n{respuesta_texto}")
-            await event.respond("Respuestas del usuario impresas en la consola.")
-        else:
-            await event.respond("No se encontraron respuestas para este usuario.")
-    except ValueError:
-        await event.respond("Usuario no encontrado.")
+@client.on(events.NewMessage(pattern='/datos'))
+async def ver_datos(event):
+    username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
+    if username in respuestas_de_usuarios:
+        #datos_usuario = respuestas_de_usuarios[username]
+        # Ordenar las claves (tema y pregunta) antes de imprimir los resultados
+        claves_ordenadas = sorted(respuestas_de_usuarios[username].keys(), key=lambda x: (int(x[0]), int(x[1])))
+        
+        respuesta_texto = "Datos almacenados:\n"
+        for clave in claves_ordenadas:
+            puntuaciones = respuestas_de_usuarios[username][clave]
+            respuesta_texto += f"Tema {clave[0]}, Pregunta {clave[1]}: {', '.join(puntuaciones)}\n"
+        
+        await event.respond(respuesta_texto)
+    else:
+        await event.respond("No hay datos almacenados para tu usuario.")
+      
 
 
 
@@ -198,13 +206,18 @@ async def callback_query_handler(event):
         else:
             resultado += f"\nPuntuación: {puntuacion:.2f}%"
 
-        # Almacenar las respuestas
-        if event.sender_id not in respuestas_de_usuarios:
-            respuestas_de_usuarios[event.sender_id] = []
-        resumen_respuesta = f"Usuario {event.sender.username} ha respondido la pregunta {numero_pregunta} del tema {''.join(re.findall(r'\d+', archivo_seleccionado))} \n{resultado}"
-        respuestas_de_usuarios[event.sender_id].append(resumen_respuesta)
+        tema_pregunta = ''.join(re.findall(r'\d+', archivo_seleccionado))
+        username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
 
-        # Restablecer selecciones a False después de enviar la respuesta
+        if username not in respuestas_de_usuarios:
+            respuestas_de_usuarios[username] = {}
+        clave_respuesta = (tema_pregunta, numero_pregunta)
+        
+        if clave_respuesta not in respuestas_de_usuarios[username]:
+            respuestas_de_usuarios[username][clave_respuesta] = []
+        
+        respuestas_de_usuarios[username][clave_respuesta].append(f"{puntuacion:.2f}%")
+
         selecciones_pregunta[archivo_seleccionado][int(numero_pregunta) - 1] = [False] * len(opciones)
 
         # Enviar alerta con el resultado
@@ -217,7 +230,7 @@ async def callback_query_handler(event):
         buttons = generar_botones_pregunta([False] * len(opciones), numero_pregunta, archivo_seleccionado)
         buttons.append([Button.inline('📤 Enviar respuesta', f'enviar_{numero_pregunta}_{archivo_seleccionado}')])
         buttons.append([Button.inline('🔙 Volver al tema', f'archivo_{archivo_seleccionado}')])
-        
+
         await event.edit(f'{texto_pregunta}\n\n{texto_opciones}', buttons=buttons)
 
 
@@ -241,3 +254,6 @@ def generar_botones_pregunta(selecciones, num_pregunta, archivo):
 
 client.start()
 client.run_until_disconnected()
+
+
+client.disconnect()

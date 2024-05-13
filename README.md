@@ -23,11 +23,11 @@ Podemos comprobar la versión de Python, ejecutandolo en la terminal/PowerShell:
 pyhton --version
 ```
 
-Nos habrá devuelto algo así (es recomendable usar la misma versión o más reciente):
+En caso de estar instalado, nos devolverá la versión (es recomendable usar la misma versión o más reciente):
 
 `Python 3.12.2`
 
-Necesitamos por otra parte instalar las dependencias necesarias, en este caso, telethon.
+Necesitamos por otra parte instalar las dependencias necesarias, en este caso, sólo necesitamos `Telethon`.
 ```bash
 pip install telethon
 ```

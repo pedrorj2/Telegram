@@ -1,60 +1,61 @@
-<h1><ins>Aprendizaje autónomo en ingeniería mediante actividades gamificadas en Telegram</ins></h1>
+<h1><ins>Autonomous Learning in Engineering through Gamified Activities on Telegram</ins></h1>
 
-- 🗂️ Este repositorio recoge los avances y códigos del [Proyecto IE24.1401 de Innovación Educativa](https://innovacioneducativa.upm.es/proyectos-ie/informacion?anyo=2023-2024&id=1160)
+- 🗂️ This repository contains the progress and code of the [IE24.1401 Educational Innovation Project](https://innovacioneducativa.upm.es/proyectos-ie/informacion?anyo=2023-2024&id=1160)
 
-- 🎯 Objetivo: Permitir a los estudiantes realizar actividades de autovaluación de una forma más autónoma y cercana.
-
-<br>
-
-### <ins>Documentación</ins>
-
- - [Documentación de Telethon](https://docs.telethon.dev/en/stable/)
- - [Memoria del proyecto](https://www.overleaf.com/read/nvbqkrzspbjp#ad7e05)
+- 🎯 Objective: Allow students to perform self-assessment activities in a more autonomous and approachable way.
 
 <br>
 
-### <ins>Requisitos</ins>
+### <ins>Documentation</ins>
 
-Debemos tener instalado `Python (versión 3.12.2)` y la libreria de `Telethon`.
+ - [Telethon Documentation](https://docs.telethon.dev/en/stable/)
+ - [Project Report](https://www.overleaf.com/read/nvbqkrzspbjp#ad7e05)
 
-Podemos comprobar la versión de Python, ejecutandolo en la terminal/PowerShell: 
+<br>
+
+### <ins>Requirements</ins>
+
+> [!IMPORTANT]
+> We need to have `Python` and the `Telethon` library installed.
+
+We can check if Python is installed and which version by running the following in the terminal/PowerShell:
 
 ```bash
-pyhton --version
+python --version
 ```
 
-En caso de estar instalado, nos devolverá la versión (es recomendable usar la misma versión o más reciente):
+If installed, it will return the version (it is recommended to use the same or a newer version):
 
-`Python 3.12.2`
+ `Python 3.12.2`
 
-Necesitamos por otra parte instalar las dependencias necesarias, en este caso, sólo necesitamos `Telethon`.
+We also need to install the necessary dependencies, in this case, we only need `Telethon`.
 ```bash
 pip install telethon
 ```
 
 <br>
 
-### <ins>Clonar el repositorio</ins>
+### <ins>Clone the repository</ins>
 
-De aquí en adelante usaremos Visual Code, una vez abierto pulsaremos `Ctrl + Shift + P`.
+From here on, we will use Visual Code. Once opened, press `Ctrl + Shift + P`.
 
-Aquí en la barra de búsqueda del propio Visual Code habrá aparecido un ">". Con ello buscaremos la acción `Git: Clone` y la seleccionamos.
+In the search bar of Visual Code, a ">" will appear. With this, search for the action `Git: Clone`.
 
-Nos pedirá que escribamos el nombre del repositorio (o el URL), lo introducimos:
+It will ask for the repository name (or URL), enter it:
 
 ```bash
 https://github.com/pedrorj2/Telegram-Gamification-UPM/
 ```
 
-Nos abrirá el explorador para elegir una ruta local donde clonar dicho repositorio.
+It will open the explorer to choose a local path to clone the repository.
 
-Al hacerlo nos saldrá una pestaña donde nos dice de abrir el repositorio, lo aceptamos.
+After doing this, a tab will appear asking to open the repository; accept it.
 
 <br>
 
-### <ins>Despliegue del bot</ins>
+### <ins>Deploy the bot</ins>
 
-Una vez clonado y abierto el repositorio con Visual Code, debemos rellenar los datos de identificación de nuestro bot que podemos ver en las primeras líneas comentadas, hemos de rellenarlos y descomentar dichas líneas.
+Once the repository is cloned and opened with Visual Code, we need to fill in the identification data of our bot, which can be seen in the first commented lines. We need to fill them in and uncomment these lines.
 
 ```bash
 # Configuración de tu API de Telegram
@@ -63,12 +64,20 @@ Una vez clonado y abierto el repositorio con Visual Code, debemos rellenar los d
 # bot_token = ' '
 ```
 
-`api_id` y `api_hash` se obtienen creando una ¨Aplicación de Telegram¨ através de https://my.telegram.org/apps.
+> [!TIP]
+> You would see a call to a `config.py` file where I import this data like this:
+> 
+> ```bash
+> from config import api_id, api_hash, bot_token
 
-`bot_token` lo obtenemos directamente de la aplicación de Telegram a través del Bot [@BotFather](https://t.me/BotFather).
-Para ello debemos crear un bot, elegir su nombre y con ello conseguiremos este `bot_token` para acceder a la HTTP API de Telegram.
 
-Con esto, podemos ejecutar nuestro código y nuestro ordenador alojará el back-end del bot, mientras esté ejecutándose, nuestro bot responderá a las acciones, pero si cerramos el Visual Code, dejará de funcionar dicho bot hasta que lo volvamos a iniciar.
+
+`api_id` y `api_hash` are obtained by creating a "Telegram Application" through https://my.telegram.org/apps.
+
+`bot_token` is obtained directly from the Telegram app via the [@BotFather](https://t.me/BotFather) bot.
+o do this, we need to create a bot, choose its name, and we will get this `bot_token` to access the Telegram HTTP API.
+
+With this, we can run our code, and our computer will host the bot's back-end. As long as it is running, our bot will respond to actions. However, if we close Visual Code, the bot will stop working until we restart it.
 
 
 

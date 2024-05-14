@@ -56,16 +56,34 @@ def listar_archivos_preguntas(prefijo):
     archivos = [f for f in os.listdir(preguntas_folder) if f.startswith(prefijo) and f.endswith('.txt')]
     return archivos
 
-def guardar_en_csv(usuario, datos, archivo='respuestas.csv'):
+def guardar_csv(usuario, datos, archivo='respuestas.csv'):
     with open(archivo, 'a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         # Asegurarse de que 'datos' es una lista de tuplas (tema, pregunta, puntuación)
         for dato in datos:
             writer.writerow([usuario, *dato, datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+            
+def cargar_csv(archivo='respuestas.csv'):
+    try:
+        with open(archivo, 'r', newline='', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if len(row) >= 4:
+                    username, tema_pregunta, numero_pregunta, puntuacion, _ = row
+                    clave_respuesta = (tema_pregunta, numero_pregunta)
+                    if username not in respuestas_de_usuarios:
+                        respuestas_de_usuarios[username] = {}
+                    if clave_respuesta not in respuestas_de_usuarios[username]:
+                        respuestas_de_usuarios[username][clave_respuesta] = []
+                    respuestas_de_usuarios[username][clave_respuesta].append(puntuacion)
+    except FileNotFoundError:
+        print("Archivo de resultados no encontrado, iniciando sin datos previos.")
+
 
 
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
+    cargar_csv()  # Carga los datos justo después de iniciar el cliente
     # Añadir usuario a la lista de activos cuando inicia el bot
     usuarios_activos.add(event.sender_id)
     print(f"Usuario {event.sender.username} inició el bot - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -98,7 +116,11 @@ async def ver_datos(event):
         respuesta_texto = "Datos almacenados:\n"
         for clave in claves_ordenadas:
             puntuaciones = respuestas_de_usuarios[username][clave]
-            respuesta_texto += f"Tema {clave[0]}, Pregunta {clave[1]}: {', '.join(puntuaciones)}\n"
+            # Aplicar el formato sin decimales a todas las puntuaciones
+            puntuaciones_formateadas = [f"{float(p.replace('%', '')):.0f}%" for p in puntuaciones]
+            respuesta_texto += f"Tema {clave[0]}, Pregunta {clave[1]}: {', '.join(puntuaciones_formateadas)}\n"
+
+
         
         await event.respond(respuesta_texto)
     else:
@@ -207,8 +229,9 @@ async def callback_query_handler(event):
 
         tema_pregunta = ''.join(re.findall(r'\d+', archivo_seleccionado))
         username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
-        clave_respuesta = (tema_pregunta, numero_pregunta, f"{puntuacion:.2f}%")
-        guardar_en_csv(username, [clave_respuesta])
+        puntuacion_texto = f"{puntuacion:.0f}%"
+        clave_respuesta = (tema_pregunta, numero_pregunta, puntuacion_texto)
+        guardar_csv(username, [clave_respuesta])
 
 
         if username not in respuestas_de_usuarios:

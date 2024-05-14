@@ -114,10 +114,14 @@ async def callback_query_handler(event):
     if data.startswith('archivo_'):
         archivo_seleccionado = data.split('archivo_')[1]
         preguntas = obtener_preguntas_desde_archivo(archivo_seleccionado)
-        # Inicializar selecciones para cada pregunta en este archivo
         selecciones_pregunta[archivo_seleccionado] = [[False] * len(opciones) for _, opciones in preguntas]
 
-        buttons = [[Button.inline(f'Pregunta {i}', f'preg_{i}_{archivo_seleccionado}')] for i, _ in enumerate(preguntas, start=1)]
+        username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
+        buttons = []
+        for i, _ in enumerate(preguntas, start=1):
+            estado = obtener_estado_pregunta(username, archivo_seleccionado, i)
+            boton_texto = f'Pregunta {i} {estado}'
+            buttons.append([Button.inline(boton_texto, f'preg_{i}_{archivo_seleccionado}')])
         buttons.append([Button.inline('🏠 Volver al inicio', 'start')])
         await event.edit('Elige una pregunta:', buttons=buttons)
 
@@ -190,9 +194,9 @@ async def callback_query_handler(event):
                 resultado += f"{chr(65 + i)} - {'Correcta' if correcta else 'Incorrecta'}\n"
 
         if puntuacion == 0 and total_correctas > 1:
-            resultado += f"\nPuntuación: {puntuacion:.2f}%\n\nUna sola respuesta incorrecta anula el resto de respuestas."
+            resultado += f"\nPuntuación: {puntuacion:.0f}%\n\nUna sola respuesta incorrecta anula el resto de respuestas."
         else:
-            resultado += f"\nPuntuación: {puntuacion:.2f}%"
+            resultado += f"\nPuntuación: {puntuacion:.0f}%"
 
         tema_pregunta = ''.join(re.findall(r'\d+', archivo_seleccionado))
         username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
@@ -208,7 +212,7 @@ async def callback_query_handler(event):
         if clave_respuesta not in respuestas_de_usuarios[username]:
             respuestas_de_usuarios[username][clave_respuesta] = []
         
-        respuestas_de_usuarios[username][clave_respuesta].append(f"{puntuacion:.2f}%")
+        respuestas_de_usuarios[username][clave_respuesta].append(f"{puntuacion:.0f}%")
 
         selecciones_pregunta[archivo_seleccionado][int(numero_pregunta) - 1] = [False] * len(opciones)
 
@@ -230,12 +234,22 @@ async def callback_query_handler(event):
     elif data == 'start':
         await start(event)  # Reutilizar la función de inicio
 
+def obtener_estado_pregunta(username, archivo, numero_pregunta):
+    tema_pregunta = ''.join(re.findall(r'\d+', archivo))
+    clave_respuesta = (tema_pregunta, str(numero_pregunta))
+    if username in respuestas_de_usuarios and clave_respuesta in respuestas_de_usuarios[username]:
+        puntuaciones = respuestas_de_usuarios[username][clave_respuesta]
+        if any(p == "100%" for p in puntuaciones):
+            return " ✅"
+        return " ❌"
+    return ""
+
 def generar_botones_pregunta(selecciones, num_pregunta, archivo):
     letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     buttons = []
     fila = []
     for i, seleccionada in enumerate(selecciones):
-        texto_opcion = f'✓ {letras[i]}' if seleccionada else letras[i]
+        texto_opcion = f'✅ {letras[i]}' if seleccionada else letras[i]
         fila.append(Button.inline(texto_opcion, f'select_{num_pregunta}_{i}_{archivo}'))
         if len(fila) == 4:
             buttons.append(fila)

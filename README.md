@@ -4,6 +4,9 @@
 
 - 🎯 Objective: Allow students to perform self-assessment activities in a more autonomous and approachable way.
 
+> [!CAUTION]
+> This `test-bdd` branch is for internal test with the new data base structure without usin SQL.
+
 <br>
 
 ### <ins>Documentation</ins>
@@ -64,12 +67,13 @@ Once the repository is cloned and opened with Visual Code, we need to fill in th
 # bot_token = ' '
 ```
 
-> [!TIP]
-> You would see a call to a `config.py` file where I import this data like this:
+> [!WARNING]
+> You would see a import call like this in my code instead:
 > 
 > ```bash
 > from config import api_id, api_hash, bot_token
-
+> ```
+> This makes possible to get this data from `config.py`, file which is not uploaded to the repository, as indicated on the `.gitignore` file.
 
 
 `api_id` y `api_hash` are obtained by creating a "Telegram Application" through https://my.telegram.org/apps.
@@ -78,3 +82,4 @@ Once the repository is cloned and opened with Visual Code, we need to fill in th
 o do this, we need to create a bot, choose its name, and we will get this `bot_token` to access the Telegram HTTP API.
 
 With this, we can run our code, and our computer will host the bot's back-end. As long as it is running, our bot will respond to actions. However, if we close Visual Code, the bot will stop working until we restart it.
+

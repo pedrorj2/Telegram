@@ -1,13 +1,15 @@
-<h1><ins>Autonomous Learning in Engineering through Gamified Activities on Telegram</ins></h1>
+<h1><ins>Autonomous Learning in Engineering through Gamified Activities Telegram Bot - ETSIAE UPM</ins></h1>
 
-- 🗂️ This repository contains the progress and code of the [IE24.1401 Educational Innovation Project](https://innovacioneducativa.upm.es/proyectos-ie/informacion?anyo=2023-2024&id=1160)
 
-- 🎯 Objective: Allow students to perform self-assessment activities in a more autonomous and approachable way.
+> [!NOTE]
+> - 🗂️ This repository contains the progress and code of the [IE24.1401 Educational Innovation Project](https://innovacioneducativa.upm.es/proyectos-ie/informacion?anyo=2023-2024&id=1160)
+> 
+> - 🎯 Objective: Allow students to perform self-assessment activities in a more autonomous and approachable way.
+>   
+> This `README.md` is made for those who are not even familiar with `Python`, so they can set up their bot by themselves.
 
 > [!CAUTION]
 > This `test-bdd` branch is for internal test with the new data base structure without usin SQL.
-
-<br>
 
 ### <ins>Documentation</ins>
 
@@ -18,8 +20,7 @@
 
 ### <ins>Requirements</ins>
 
-> [!IMPORTANT]
-> We need to have `Python` and the `Telethon` library installed.
+Is needed to have `Python` and the `Telethon` module installed.
 
 We can check if Python is installed and which version by running the following in the terminal/PowerShell:
 
@@ -31,16 +32,44 @@ If installed, it will return the version (it is recommended to use the same or a
 
  `Python 3.12.2`
 
-We also need to install the necessary dependencies, in this case, we only need `Telethon`.
+ <br>
+
+> [!CAUTION]
+> If not installed, go to https://www.python.org/downloads and install it. This already include `pip` since `Python 3.4`.
+
+We also need to install `Telethon` module, we install that with `pip` by entering in the terminal/PowerShell:
 ```bash
 pip install telethon
 ```
+
+We can check the instalation then by doing in the terminal/PowerShell:
+```bash
+pip list
+```
+
+This will return somethin like this in the terminal/PowerShell:
+```bash
+Package  Version
+-------- -------
+pip      24.0
+pyaes    1.6.1
+pyasn1   0.5.1
+rsa      4.9
+Telethon 1.34.0
+```
+
+With this, we finishined using the terminal/PowerShell for now.
 
 <br>
 
 ### <ins>Clone the repository</ins>
 
-From here on, we will use Visual Code. Once opened, press `Ctrl + Shift + P`.
+> [!NOTE]
+> This could be done by different programs as Visual Code, Visual Studio, Spyder, etc
+
+We will use `Visual Code` but others are also compatible with it.
+
+Once opened, press `Ctrl + Shift + P`.
 
 In the search bar of Visual Code, a ">" will appear. With this, search for the action `Git: Clone`.
 
@@ -82,4 +111,6 @@ Once the repository is cloned and opened with Visual Code, we need to fill in th
 o do this, we need to create a bot, choose its name, and we will get this `bot_token` to access the Telegram HTTP API.
 
 With this, we can run our code, and our computer will host the bot's back-end. As long as it is running, our bot will respond to actions. However, if we close Visual Code, the bot will stop working until we restart it.
+
+
 

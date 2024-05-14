@@ -76,12 +76,11 @@ def cargar_csv(archivo='respuestas.csv'):
     except FileNotFoundError:
         print("Archivo de resultados no encontrado, iniciando sin datos previos.")
 
-
+# Cargar los datos inmediatamente al iniciar el bot
+cargar_csv()
 
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
-    cargar_csv()  # Carga los datos justo después de iniciar el cliente
-    print(f"Usuario {event.sender.username} inició el bot - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     archivos = listar_archivos_preguntas('tema_')
     buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
     await event.respond('Elige un tema:', buttons=buttons)
@@ -91,7 +90,6 @@ async def start(event):
 async def ver_datos(event):
     username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
     if username in respuestas_de_usuarios:
-        # datos_usuario = respuestas_de_usuarios[username]
         # Ordenar las claves (tema y pregunta) antes de imprimir los resultados
         claves_ordenadas = sorted(respuestas_de_usuarios[username].keys(), key=lambda x: (int(x[0]), int(x[1])))
         
@@ -108,8 +106,6 @@ async def ver_datos(event):
     else:
         await event.respond("No hay datos almacenados para tu usuario.")
       
-
-
 
 @client.on(events.CallbackQuery)
 async def callback_query_handler(event):

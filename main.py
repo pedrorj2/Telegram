@@ -1,9 +1,12 @@
 from telethon import TelegramClient, events
 from telethon.tl.custom import Button
+from datetime import datetime
+
+from config import api_id, api_hash, bot_token
+
 import os
 import re
-from datetime import datetime
-from config import api_id, api_hash, bot_token
+import csv
 
 # Configuración de tu API de Telegram, la importo del archivo config.py
 # No es público por seguridad, sólo contiene estos tres datos de a continuación:
@@ -53,6 +56,14 @@ def listar_archivos_preguntas(prefijo):
     archivos = [f for f in os.listdir(preguntas_folder) if f.startswith(prefijo) and f.endswith('.txt')]
     return archivos
 
+def guardar_en_csv(usuario, datos, archivo='respuestas.csv'):
+    with open(archivo, 'a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        # Asegurarse de que 'datos' es una lista de tuplas (tema, pregunta, puntuación)
+        for dato in datos:
+            writer.writerow([usuario, *dato, datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+
+
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
     # Añadir usuario a la lista de activos cuando inicia el bot
@@ -80,7 +91,7 @@ async def lanzar_actividad(event):
 async def ver_datos(event):
     username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
     if username in respuestas_de_usuarios:
-        #datos_usuario = respuestas_de_usuarios[username]
+        # datos_usuario = respuestas_de_usuarios[username]
         # Ordenar las claves (tema y pregunta) antes de imprimir los resultados
         claves_ordenadas = sorted(respuestas_de_usuarios[username].keys(), key=lambda x: (int(x[0]), int(x[1])))
         
@@ -196,6 +207,9 @@ async def callback_query_handler(event):
 
         tema_pregunta = ''.join(re.findall(r'\d+', archivo_seleccionado))
         username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
+        clave_respuesta = (tema_pregunta, numero_pregunta, f"{puntuacion:.2f}%")
+        guardar_en_csv(username, [clave_respuesta])
+
 
         if username not in respuestas_de_usuarios:
             respuestas_de_usuarios[username] = {}

@@ -64,12 +64,13 @@ Once the repository is cloned and opened with Visual Code, we need to fill in th
 # bot_token = ' '
 ```
 
-> [!TIP]
-> You would see a call to a `config.py` file where I import this data like this:
+> [!WARNING]
+> You would see a import call like this in my code instead:
 > 
 > ```bash
 > from config import api_id, api_hash, bot_token
-
+> ```
+> This makes possible to get this data from `config.py`, file which is not uploaded to the repository, as indicated on the `.gitignore` file.
 
 
 `api_id` y `api_hash` are obtained by creating a "Telegram Application" through https://my.telegram.org/apps.

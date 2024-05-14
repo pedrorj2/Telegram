@@ -3,6 +3,7 @@ from telethon.tl.custom import Button
 from datetime import datetime
 
 from config import api_id, api_hash, bot_token
+from metrics import ranking_usuarios
 
 import os
 import re
@@ -25,6 +26,7 @@ selecciones_pregunta = {}
 
 # Almacenar las respuestas de un usuario con mejor estructura
 respuestas_de_usuarios = {}
+
 
 # Función para obtener las preguntas desde el archivo
 def obtener_preguntas_desde_archivo(archivo):
@@ -85,6 +87,13 @@ async def start(event):
     buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
     await event.respond('Elige un tema:', buttons=buttons)
 
+@client.on(events.NewMessage(pattern='/ranking'))
+async def ranking(event):
+    ranking = ranking_usuarios()
+    ranking_texto = "Ranking de usuarios:\n"
+    for i, (usuario, puntuacion) in enumerate(ranking, start=1):
+        ranking_texto += f"{i}. {usuario}: {puntuacion} puntos\n"
+    await event.respond(ranking_texto)
 
 @client.on(events.NewMessage(pattern='/datos'))
 async def ver_datos(event):

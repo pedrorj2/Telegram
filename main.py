@@ -17,14 +17,11 @@ import csv
 # Iniciar el cliente de Telegram
 client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
 
-# Carpeta donde se encuentran los archivos de preguntas y actividades
+# Carpeta donde se encuentran los archivos de preguntas
 preguntas_folder = r'Preguntas'
 
 # Diccionario para mantener las selecciones de respuestas
 selecciones_pregunta = {}
-
-# Lista para mantener a los usuarios activos
-usuarios_activos = set()
 
 # Almacenar las respuestas de un usuario con mejor estructura
 respuestas_de_usuarios = {}
@@ -84,26 +81,11 @@ def cargar_csv(archivo='respuestas.csv'):
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
     cargar_csv()  # Carga los datos justo después de iniciar el cliente
-    # Añadir usuario a la lista de activos cuando inicia el bot
-    usuarios_activos.add(event.sender_id)
     print(f"Usuario {event.sender.username} inició el bot - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     archivos = listar_archivos_preguntas('tema_')
     buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
     await event.respond('Elige un tema:', buttons=buttons)
 
-@client.on(events.NewMessage(pattern='/activities'))
-async def lanzar_actividad(event):
-    # Verificar si el usuario es aeropedrax
-    if event.sender.username != 'aeropedrax':
-        await event.respond("No tienes permiso para usar este comando.")
-        print(f"El usuario {event.sender.username} está intentando lanzar una actividad (sin éxito xd)")
-        return
-    print(f"El profesor {event.sender.username} está lanzando una actividad ")
-    # Buscar archivos de actividades en la carpeta preguntas_folder
-    archivos_actividad = listar_archivos_preguntas('actividad_')
-    # Presentar archivos de actividad al profesor para seleccionar
-    buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos_actividad]
-    await event.respond('Elige un archivo de actividad:', buttons=buttons)
 
 @client.on(events.NewMessage(pattern='/datos'))
 async def ver_datos(event):
@@ -143,17 +125,6 @@ async def callback_query_handler(event):
         buttons.append([Button.inline('🏠 Volver al inicio', 'start')])
         await event.edit('Elige una pregunta:', buttons=buttons)
 
-    elif data.startswith('actividad_'):
-        archivo_actividad = data.split('actividad_')[1]
-        preguntas = obtener_preguntas_desde_archivo(archivo_actividad)
-        # Aquí puedes implementar la lógica para mostrar las preguntas y enviarlas en directo
-
-        # Por ahora, simplemente imprimimos las preguntas como ejemplo
-        for titulo, opciones in preguntas:
-            texto_opciones = "\n".join([f"{chr(65 + i)}. {opcion[0]}" for i, opcion in enumerate(opciones)])
-            print(f'{titulo}\n\n{texto_opciones}\n')
-
-        await event.answer('Actividad lanzada con éxito.')
 
     if data.startswith('preg_'):
         _, numero_pregunta, archivo_seleccionado = data.split('_', 2)

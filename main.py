@@ -85,7 +85,12 @@ cargar_csv()
 async def start(event):
     archivos = listar_archivos_preguntas('tema_')
     buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
-    await event.respond('Elige un tema:', buttons=buttons)
+
+    # Verificar si el usuario tiene un nombre de usuario
+    if event.sender.username is None:
+        await event.respond('**Por favor, establece un nombre de usuario en la configuración de Telegram para poder guardar tus respuestas.\n\nSi no lo haces puedes perder tu progreso.**\n\nElige un tema:', buttons=buttons)
+    else:
+        await event.respond('Elige un tema:', buttons=buttons)
 
 @client.on(events.NewMessage(pattern='/ranking'))
 async def ranking(event):
@@ -102,7 +107,7 @@ async def media(event):
     # la puntuación máxima quiero que sea el 100 multiplicado por el numero de preguntas de todos los temas (archivos) juntos
     puntuacion_maxima = 100 * sum(len(obtener_preguntas_desde_archivo(archivo)) for archivo in listar_archivos_preguntas('tema_')) 
     puntuacion_media = sum(puntuaciones) / len(puntuaciones)
-    await event.respond(f"Media de puntuaciones: {puntuacion_media:.0f}%\nPuntuación máxima posible: {puntuacion_maxima:.0f}%")
+    await event.respond(f"Media de puntuaciones: {puntuacion_media:.0f} puntos\nPuntuación máxima posible: {puntuacion_maxima:.0f} puntos")
 
 @client.on(events.NewMessage(pattern='/reset'))
 async def reset(event):
@@ -111,21 +116,7 @@ async def reset(event):
         buttons = [[Button.inline('Sí', 'confirmar_reset'), Button.inline('No', 'cancelar_reset')]]
         await event.respond('¿Estás seguro de que quieres borrar todas las respuestas? No se podrán recuperar', buttons=buttons)
     else:
-        await event.respond('No tienes permiso para ejecutar este comando.')
-
-@client.on(events.CallbackQuery)
-async def callback(event):
-    # Verificar si el usuario que interactúa con los botones es el profesor autorizado
-    if event.sender.username == 'aeropedrax':
-        if event.data == b'confirmar_reset':
-            if os.path.exists('respuestas.csv'):
-                os.remove('respuestas.csv')
-            respuestas_de_usuarios.clear()
-            await event.edit('Datos borrados con éxito.')
-        elif event.data == b'cancelar_reset':
-            await event.edit('Acción cancelada. Los datos no fueron borrados.')
-    else:
-        await event.answer('No tienes permiso para realizar esta acción.', alert=True)
+        await event.respond('No tienes permiso para ejecutar este comando.')   
 
 
 
@@ -159,6 +150,16 @@ async def ver_datos(event):
 @client.on(events.CallbackQuery)
 async def callback_query_handler(event):
     data = event.data.decode()
+
+    # Verificar si el usuario tiene permiso para borrar los datos
+    if event.sender.username == 'aeropedrax':
+        if event.data == b'confirmar_reset':
+            if os.path.exists('respuestas.csv'):
+                os.remove('respuestas.csv')
+            respuestas_de_usuarios.clear()
+            await event.edit('Datos borrados con éxito.')
+        elif event.data == b'cancelar_reset':
+            await event.edit('Acción cancelada. Los datos no fueron borrados.')
 
     if data.startswith('archivo_'):
         archivo_seleccionado = data.split('archivo_')[1]
@@ -242,9 +243,7 @@ async def callback_query_handler(event):
             if selecciones[i]:
                 resultado += f"{chr(65 + i)} - {'Correcta' if correcta else 'Incorrecta'}\n"
 
-        if puntuacion == 0 and total_correctas > 1:
-            resultado += f"\nPuntuación: {puntuacion:.0f}%\n\nUna sola respuesta incorrecta anula el resto de respuestas."
-        else:
+        if puntuacion == 0:
             resultado += f"\nPuntuación: {puntuacion:.0f}%"
 
         tema_pregunta = ''.join(re.findall(r'\d+', archivo_seleccionado))
@@ -269,15 +268,25 @@ async def callback_query_handler(event):
         await event.answer(resultado, alert=True)
 
         # Restablecer la visualización de las opciones
-        instruccion_pregunta = "la única opción correcta:" if total_correctas == 1 else f"las {total_correctas} respuestas correctas:"
-        texto_pregunta = f"{pregunta}\n\nSeleccione {instruccion_pregunta}"
-        texto_opciones = "\n".join([f"{chr(65 + i)}. {opcion[0]}" for i, opcion in enumerate(opciones)])
-        buttons = generar_botones_pregunta([False] * len(opciones), numero_pregunta, archivo_seleccionado)
-        buttons.append([Button.inline('📤 Enviar respuesta', f'enviar_{numero_pregunta}_{archivo_seleccionado}')])
-        buttons.append([Button.inline('🔙 Volver al tema', f'archivo_{archivo_seleccionado}')])
-
-        await event.edit(f'{texto_pregunta}\n\n{texto_opciones}', buttons=buttons)
-
+        # Quiero que si la respuesta es correcta, me devuleva al menú de las preguntas de ese mismo tema, y si es incorrecta, se mantenga en la pregunta que estoy respondiendo pero restableciendo las seleecionadas
+        if puntuacion == 100:
+            buttons = []
+            for i, _ in enumerate(preguntas, start=1):
+                estado = obtener_estado_pregunta(username, archivo_seleccionado, i)
+                boton_texto = f'Pregunta {i} {estado}'
+                buttons.append([Button.inline(boton_texto, f'preg_{i}_{archivo_seleccionado}')])
+            buttons.append([Button.inline('🏠 Volver al inicio', 'start')])
+            await event.edit('Elige una pregunta:', buttons=buttons)
+        else:
+            instruccion_pregunta = "la única opción correcta:" if total_correctas == 1 else f"las {total_correctas} respuestas correctas:"
+            texto_pregunta = f"{pregunta}\n\nSeleccione {instruccion_pregunta}"
+            texto_opciones = "\n".join([f"{chr(65 + i)}. {opcion[0]}" for i, opcion in enumerate(opciones)])
+            buttons = generar_botones_pregunta([False] * len(opciones), numero_pregunta, archivo_seleccionado)
+            buttons.append([Button.inline('📤 Enviar respuesta', f'enviar_{numero_pregunta}_{archivo_seleccionado}')])
+            buttons.append([Button.inline('🔙 Volver al tema', f'archivo_{archivo_seleccionado}')])
+            await event.edit(f'{texto_pregunta}\n\n{texto_opciones}', buttons=buttons)
+        
+    
 
 
     elif data == 'start':

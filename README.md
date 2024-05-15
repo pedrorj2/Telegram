@@ -4,7 +4,7 @@
 > [!NOTE]
 > - 🗂️ This repository contains the progress and code of the [IE24.1401 Educational Innovation Project](https://innovacioneducativa.upm.es/proyectos-ie/informacion?anyo=2023-2024&id=1160)
 > 
-> - 🎯 Objective: Allow students to perform self-assessment activities in a more autonomous and approachable way.
+> - 🎯 Objective: Enable students to perform self-assessment activities in a more autonomous and approachable way, using gamification techniques. By incorporating elements of game design, such as rewards, challenges, and progress tracking, we aim to make self-assessment more engaging and enjoyable for students. This approach will foster greater motivation, enhance learning experiences, and encourage students to take ownership of their educational journey.
 >   
 > This `README.md` is made for those who are not even familiar with `Python`, so they can set up their bot by themselves.
 <br>

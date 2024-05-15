@@ -95,6 +95,22 @@ async def ranking(event):
         ranking_texto += f"{i}. {usuario}: {puntuacion} puntos\n"
     await event.respond(ranking_texto)
 
+@client.on(events.NewMessage(pattern='/media'))
+async def media(event):
+    ranking = ranking_usuarios()
+    puntuaciones = [puntuacion for _, puntuacion in ranking]
+    # la puntuación máxima quiero que sea el 100 multiplicado por el numero de preguntas de todos los temas (archivos) juntos
+    puntuacion_maxima = 100 * sum(len(obtener_preguntas_desde_archivo(archivo)) for archivo in listar_archivos_preguntas('tema_')) 
+    puntuacion_media = sum(puntuaciones) / len(puntuaciones)
+    await event.respond(f"Media de puntuaciones: {puntuacion_media:.0f}%\nPuntuación máxima posible: {puntuacion_maxima:.0f}%")
+
+@client.on(events.NewMessage(pattern='/reset'))  #borra todo el csv  y los datos almacenados en el diccionario
+async def reset(event):
+    with open('respuestas.csv', 'w', newline='', encoding='utf-8') as file:
+        pass
+    respuestas_de_usuarios.clear()
+    await event.respond("Datos eliminados correctamente.")
+
 @client.on(events.NewMessage(pattern='/datos'))
 async def ver_datos(event):
     username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
@@ -109,11 +125,12 @@ async def ver_datos(event):
             puntuaciones_formateadas = [f"{float(p.replace('%', '')):.0f}%" for p in puntuaciones]
             respuesta_texto += f"Tema {clave[0]}, Pregunta {clave[1]}: {', '.join(puntuaciones_formateadas)}\n"
 
-
-        
         await event.respond(respuesta_texto)
     else:
         await event.respond("No hay datos almacenados para tu usuario.")
+
+
+
       
 
 @client.on(events.CallbackQuery)

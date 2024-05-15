@@ -104,12 +104,35 @@ async def media(event):
     puntuacion_media = sum(puntuaciones) / len(puntuaciones)
     await event.respond(f"Media de puntuaciones: {puntuacion_media:.0f}%\nPuntuación máxima posible: {puntuacion_maxima:.0f}%")
 
-@client.on(events.NewMessage(pattern='/reset'))  #borra todo el csv  y los datos almacenados en el diccionario
+@client.on(events.NewMessage(pattern='/reset'))
 async def reset(event):
-    with open('respuestas.csv', 'w', newline='', encoding='utf-8') as file:
-        pass
-    respuestas_de_usuarios.clear()
-    await event.respond("Datos eliminados correctamente.")
+    # Verificar si el usuario que ejecuta el comando es el profesor autorizado
+    if event.sender.username == 'aeropedrax':
+        buttons = [[Button.inline('Sí', 'confirmar_reset'), Button.inline('No', 'cancelar_reset')]]
+        await event.respond('¿Estás seguro de que quieres borrar todas las respuestas? No se podrán recuperar', buttons=buttons)
+    else:
+        await event.respond('No tienes permiso para ejecutar este comando.')
+
+@client.on(events.CallbackQuery)
+async def callback(event):
+    # Verificar si el usuario que interactúa con los botones es el profesor autorizado
+    if event.sender.username == 'aeropedrax':
+        if event.data == b'confirmar_reset':
+            if os.path.exists('respuestas.csv'):
+                os.remove('respuestas.csv')
+            respuestas_de_usuarios.clear()
+            await event.edit('Datos borrados con éxito.')
+        elif event.data == b'cancelar_reset':
+            await event.edit('Acción cancelada. Los datos no fueron borrados.')
+    else:
+        await event.answer('No tienes permiso para realizar esta acción.', alert=True)
+
+
+
+@client.on(events.NewMessage(pattern='/lista'))
+async def lista(event):
+    usuarios = list(respuestas_de_usuarios.keys())
+    await event.respond(f"Usuarios con datos almacenados:\n{', '.join(usuarios)}")    
 
 @client.on(events.NewMessage(pattern='/datos'))
 async def ver_datos(event):

@@ -9,7 +9,7 @@
 > This `README.md` is made for those who are not even familiar with `Python`, so they can set up their bot by themselves.
 
 > [!CAUTION]
-> This `test-bdd` branch is for internal test with the new data base structure without usin SQL.
+> This `test-bdd-metrics` branch is for internal test with the new metrics functions.
 
 ### <ins>Documentation</ins>
 

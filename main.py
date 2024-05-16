@@ -2,7 +2,7 @@ from telethon import TelegramClient, events
 from telethon.tl.custom import Button
 from datetime import datetime
 
-from config import api_id, api_hash, bot_token
+from config import api_id, api_hash, bot_token, lista_profesores
 from metrics import ranking_usuarios
 
 import os
@@ -13,7 +13,8 @@ import csv
 # No es público por seguridad, sólo contiene estos tres datos de a continuación:
 # api_id = ' '
 # api_hash = ' '
-# bot_token = ''
+# bot_token = ' '
+# lista_profesores = []
 
 # Iniciar el cliente de Telegram
 client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
@@ -26,7 +27,6 @@ selecciones_pregunta = {}
 
 # Almacenar las respuestas de un usuario con mejor estructura
 respuestas_de_usuarios = {}
-
 
 # Función para obtener las preguntas desde el archivo
 def obtener_preguntas_desde_archivo(archivo):
@@ -68,29 +68,27 @@ def cargar_csv(archivo='respuestas.csv'):
             reader = csv.reader(file)
             for row in reader:
                 if len(row) >= 4:
-                    username, tema_pregunta, numero_pregunta, puntuacion, _ = row
+                    user_id, tema_pregunta, numero_pregunta, puntuacion, _ = row
                     clave_respuesta = (tema_pregunta, numero_pregunta)
-                    if username not in respuestas_de_usuarios:
-                        respuestas_de_usuarios[username] = {}
-                    if clave_respuesta not in respuestas_de_usuarios[username]:
-                        respuestas_de_usuarios[username][clave_respuesta] = []
-                    respuestas_de_usuarios[username][clave_respuesta].append(puntuacion)
+                    if user_id not in respuestas_de_usuarios:
+                        respuestas_de_usuarios[user_id] = {}
+                    if clave_respuesta not in respuestas_de_usuarios[user_id]:
+                        respuestas_de_usuarios[user_id][clave_respuesta] = []
+                    respuestas_de_usuarios[user_id][clave_respuesta].append(puntuacion)
     except FileNotFoundError:
         print("Archivo de resultados no encontrado, iniciando sin datos previos.")
 
+
 # Cargar los datos inmediatamente al iniciar el bot
 cargar_csv()
+
 
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
     archivos = listar_archivos_preguntas('tema_')
     buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
-
-    # Verificar si el usuario tiene un nombre de usuario
-    if event.sender.username is None:
-        await event.respond('**Por favor, establece un nombre de usuario en la configuración de Telegram para poder guardar tus respuestas.\n\nSi no lo haces puedes perder tu progreso.**\n\nElige un tema:', buttons=buttons)
-    else:
-        await event.respond('Elige un tema:', buttons=buttons)
+    await event.respond('Elige un tema:', buttons=buttons)
+    
 
 @client.on(events.NewMessage(pattern='/ranking'))
 async def ranking(event):
@@ -99,6 +97,7 @@ async def ranking(event):
     for i, (usuario, puntuacion) in enumerate(ranking, start=1):
         ranking_texto += f"{i}. {usuario}: {puntuacion} puntos\n"
     await event.respond(ranking_texto)
+
 
 @client.on(events.NewMessage(pattern='/media'))
 async def media(event):
@@ -109,32 +108,37 @@ async def media(event):
     puntuacion_media = sum(puntuaciones) / len(puntuaciones)
     await event.respond(f"Media de puntuaciones: {puntuacion_media:.0f} puntos\nPuntuación máxima posible: {puntuacion_maxima:.0f} puntos")
 
+
 @client.on(events.NewMessage(pattern='/reset'))
 async def reset(event):
     # Verificar si el usuario que ejecuta el comando es el profesor autorizado
-    if event.sender.username == 'aeropedrax':
+    if event.sender.id in lista_profesores:
         buttons = [[Button.inline('Sí', 'confirmar_reset'), Button.inline('No', 'cancelar_reset')]]
         await event.respond('¿Estás seguro de que quieres borrar todas las respuestas? No se podrán recuperar', buttons=buttons)
     else:
+        print(event.sender.id)
         await event.respond('No tienes permiso para ejecutar este comando.')   
-
 
 
 @client.on(events.NewMessage(pattern='/lista'))
 async def lista(event):
-    usuarios = list(respuestas_de_usuarios.keys())
-    await event.respond(f"Usuarios con datos almacenados:\n{', '.join(usuarios)}")    
+    if respuestas_de_usuarios:
+        lista_usuarios = '\n'.join(respuestas_de_usuarios.keys())
+        await event.respond(f"Usuarios con datos almacenados:\n{lista_usuarios}")
+    else:
+        await event.respond("No hay datos almacenados para ningún usuario.")
+
 
 @client.on(events.NewMessage(pattern='/datos'))
 async def ver_datos(event):
-    username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
-    if username in respuestas_de_usuarios:
+    user_id = event.sender.id if event.sender.id else f"user_{event.sender_id}"
+    if user_id in respuestas_de_usuarios:
         # Ordenar las claves (tema y pregunta) antes de imprimir los resultados
-        claves_ordenadas = sorted(respuestas_de_usuarios[username].keys(), key=lambda x: (int(x[0]), int(x[1])))
+        claves_ordenadas = sorted(respuestas_de_usuarios[user_id].keys(), key=lambda x: (int(x[0]), int(x[1])))
         
         respuesta_texto = "Datos almacenados:\n"
         for clave in claves_ordenadas:
-            puntuaciones = respuestas_de_usuarios[username][clave]
+            puntuaciones = respuestas_de_usuarios[user_id][clave]
             # Aplicar el formato sin decimales a todas las puntuaciones
             puntuaciones_formateadas = [f"{float(p.replace('%', '')):.0f}%" for p in puntuaciones]
             respuesta_texto += f"Tema {clave[0]}, Pregunta {clave[1]}: {', '.join(puntuaciones_formateadas)}\n"
@@ -145,14 +149,21 @@ async def ver_datos(event):
 
 
 
-      
+    
+
+###########################################################################################
+################################    EVENTOS DE MENSAJES    ################################
+###########################################################################################     
+
+
 
 @client.on(events.CallbackQuery)
 async def callback_query_handler(event):
     data = event.data.decode()
 
+
     # Verificar si el usuario tiene permiso para borrar los datos
-    if event.sender.username == 'aeropedrax':
+    if event.sender.id in lista_profesores:
         if event.data == b'confirmar_reset':
             if os.path.exists('respuestas.csv'):
                 os.remove('respuestas.csv')
@@ -166,10 +177,10 @@ async def callback_query_handler(event):
         preguntas = obtener_preguntas_desde_archivo(archivo_seleccionado)
         selecciones_pregunta[archivo_seleccionado] = [[False] * len(opciones) for _, opciones in preguntas]
 
-        username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
+        user_id = event.sender.id if event.sender.id else f"user_{event.sender_id}"
         buttons = []
         for i, _ in enumerate(preguntas, start=1):
-            estado = obtener_estado_pregunta(username, archivo_seleccionado, i)
+            estado = obtener_estado_pregunta(user_id, archivo_seleccionado, i)
             boton_texto = f'Pregunta {i} {estado}'
             buttons.append([Button.inline(boton_texto, f'preg_{i}_{archivo_seleccionado}')])
         buttons.append([Button.inline('🏠 Volver al inicio', 'start')])
@@ -247,20 +258,20 @@ async def callback_query_handler(event):
             resultado += f"\nPuntuación: {puntuacion:.0f}%"
 
         tema_pregunta = ''.join(re.findall(r'\d+', archivo_seleccionado))
-        username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
+        user_id = event.sender.id if event.sender.id else f"user_{event.sender_id}"
         puntuacion_texto = f"{puntuacion:.0f}%"
         clave_respuesta = (tema_pregunta, numero_pregunta, puntuacion_texto)
-        guardar_csv(username, [clave_respuesta])
+        guardar_csv(user_id, [clave_respuesta])
 
 
-        if username not in respuestas_de_usuarios:
-            respuestas_de_usuarios[username] = {}
+        if user_id not in respuestas_de_usuarios:
+            respuestas_de_usuarios[user_id] = {}
         clave_respuesta = (tema_pregunta, numero_pregunta)
         
-        if clave_respuesta not in respuestas_de_usuarios[username]:
-            respuestas_de_usuarios[username][clave_respuesta] = []
+        if clave_respuesta not in respuestas_de_usuarios[user_id]:
+            respuestas_de_usuarios[user_id][clave_respuesta] = []
         
-        respuestas_de_usuarios[username][clave_respuesta].append(f"{puntuacion:.0f}%")
+        respuestas_de_usuarios[user_id][clave_respuesta].append(f"{puntuacion:.0f}%")
 
         selecciones_pregunta[archivo_seleccionado][int(numero_pregunta) - 1] = [False] * len(opciones)
 
@@ -272,7 +283,7 @@ async def callback_query_handler(event):
         if puntuacion == 100:
             buttons = []
             for i, _ in enumerate(preguntas, start=1):
-                estado = obtener_estado_pregunta(username, archivo_seleccionado, i)
+                estado = obtener_estado_pregunta(user_id, archivo_seleccionado, i)
                 boton_texto = f'Pregunta {i} {estado}'
                 buttons.append([Button.inline(boton_texto, f'preg_{i}_{archivo_seleccionado}')])
             buttons.append([Button.inline('🏠 Volver al inicio', 'start')])
@@ -292,11 +303,11 @@ async def callback_query_handler(event):
     elif data == 'start':
         await start(event)  # Reutilizar la función de inicio
 
-def obtener_estado_pregunta(username, archivo, numero_pregunta):
+def obtener_estado_pregunta(user_id, archivo, numero_pregunta):
     tema_pregunta = ''.join(re.findall(r'\d+', archivo))
     clave_respuesta = (tema_pregunta, str(numero_pregunta))
-    if username in respuestas_de_usuarios and clave_respuesta in respuestas_de_usuarios[username]:
-        puntuaciones = respuestas_de_usuarios[username][clave_respuesta]
+    if user_id in respuestas_de_usuarios and clave_respuesta in respuestas_de_usuarios[user_id]:
+        puntuaciones = respuestas_de_usuarios[user_id][clave_respuesta]
         if any(p == "100%" for p in puntuaciones):
             return " ✅"
         return " ❌"

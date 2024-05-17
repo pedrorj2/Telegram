@@ -14,6 +14,7 @@ import csv
 # api_hash = ' '
 # bot_token = ''
 
+
 # Iniciar el cliente de Telegram
 client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
 

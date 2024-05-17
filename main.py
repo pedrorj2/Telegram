@@ -86,7 +86,7 @@ async def start(event):
     await event.respond('Elige un tema:', buttons=buttons)
 
 
-@client.on(events.NewMessage(pattern='/datos'))
+@client.on(events.NewMessage(pattern='/mis_respuestas'))
 async def ver_datos(event):
     username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
     if username in respuestas_de_usuarios:

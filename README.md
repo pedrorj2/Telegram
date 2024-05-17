@@ -33,7 +33,7 @@ If installed, it will return the version (it is recommended to use the same or a
  <br>
 
 > [!CAUTION]
-> If not installed, go to https://www.python.org/downloads and install it. This already include `pip` since `Python 3.4`.
+> If not installed, go to https://www.python.org/downloads. This already include `pip` since `Python 3.4`.
 
 We also need to install `Telethon` module, we install that with `pip` by entering in the terminal/PowerShell:
 ```bash

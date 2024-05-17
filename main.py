@@ -14,7 +14,6 @@ import csv
 # api_hash = ' '
 # bot_token = ' '
 
-
 # Iniciar el cliente de Telegram
 client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
 
@@ -54,12 +53,12 @@ def listar_archivos_preguntas(prefijo):
     archivos = [f for f in os.listdir(preguntas_folder) if f.startswith(prefijo) and f.endswith('.txt')]
     return archivos
 
-def guardar_csv(usuario, datos, archivo='respuestas.csv'):
+def guardar_csv(user_id, datos, archivo='respuestas.csv'):
     with open(archivo, 'a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         # Asegurarse de que 'datos' es una lista de tuplas (tema, pregunta, puntuación)
         for dato in datos:
-            writer.writerow([usuario, *dato, datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+            writer.writerow([user_id, *dato, datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
             
 def cargar_csv(archivo='respuestas.csv'):
     try:
@@ -67,13 +66,13 @@ def cargar_csv(archivo='respuestas.csv'):
             reader = csv.reader(file)
             for row in reader:
                 if len(row) >= 4:
-                    username, tema_pregunta, numero_pregunta, puntuacion, _ = row
+                    user_id, tema_pregunta, numero_pregunta, puntuacion, _ = row
                     clave_respuesta = (tema_pregunta, numero_pregunta)
-                    if username not in respuestas_de_usuarios:
-                        respuestas_de_usuarios[username] = {}
-                    if clave_respuesta not in respuestas_de_usuarios[username]:
-                        respuestas_de_usuarios[username][clave_respuesta] = []
-                    respuestas_de_usuarios[username][clave_respuesta].append(puntuacion)
+                    if user_id not in respuestas_de_usuarios:
+                        respuestas_de_usuarios[user_id] = {}
+                    if clave_respuesta not in respuestas_de_usuarios[user_id]:
+                        respuestas_de_usuarios[user_id][clave_respuesta] = []
+                    respuestas_de_usuarios[user_id][clave_respuesta].append(puntuacion)
     except FileNotFoundError:
         print("Archivo de resultados no encontrado, iniciando sin datos previos.")
 
@@ -86,18 +85,16 @@ async def start(event):
     buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
     await event.respond('Elige un tema:', buttons=buttons)
 
-
 @client.on(events.NewMessage(pattern='/mis_respuestas'))
 async def ver_datos(event):
-    username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
-    if username in respuestas_de_usuarios:
+    user_id = str(event.sender_id)
+    if user_id in respuestas_de_usuarios:
         # Ordenar las claves (tema y pregunta) antes de imprimir los resultados
-        claves_ordenadas = sorted(respuestas_de_usuarios[username].keys(), key=lambda x: (x[0], x[1]))
+        claves_ordenadas = sorted(respuestas_de_usuarios[user_id].keys(), key=lambda x: (x[0], x[1]))
 
-        
         respuesta_texto = "Datos almacenados:\n"
         for clave in claves_ordenadas:
-            puntuaciones = respuestas_de_usuarios[username][clave]
+            puntuaciones = respuestas_de_usuarios[user_id][clave]
             # Aplicar el formato sin decimales a todas las puntuaciones
             puntuaciones_formateadas = [f"{float(p.replace('%', '')):.0f}%" for p in puntuaciones]
             respuesta_texto += f"Tema {clave[0]}, Pregunta {clave[1]}: {', '.join(puntuaciones_formateadas)}\n"
@@ -105,7 +102,6 @@ async def ver_datos(event):
         await event.respond(respuesta_texto)
     else:
         await event.respond("No hay datos almacenados para tu usuario.")
-      
 
 @client.on(events.CallbackQuery)
 async def callback_query_handler(event):
@@ -116,15 +112,14 @@ async def callback_query_handler(event):
         preguntas = obtener_preguntas_desde_archivo(archivo_seleccionado)
         selecciones_pregunta[archivo_seleccionado] = [[False] * len(opciones) for _, opciones in preguntas]
 
-        username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
+        user_id = str(event.sender_id)
         buttons = []
         for i, _ in enumerate(preguntas, start=1):
-            estado = obtener_estado_pregunta(username, archivo_seleccionado, i)
+            estado = obtener_estado_pregunta(user_id, archivo_seleccionado, i)
             boton_texto = f'Pregunta {i} {estado}'
             buttons.append([Button.inline(boton_texto, f'preg_{i}_{archivo_seleccionado}')])
         buttons.append([Button.inline('🏠 Volver al inicio', 'start')])
         await event.edit('Elige una pregunta:', buttons=buttons)
-
 
     if data.startswith('preg_'):
         _, numero_pregunta, archivo_seleccionado = data.split('_', 2)
@@ -199,20 +194,19 @@ async def callback_query_handler(event):
             resultado += f"\nPuntuación: {puntuacion:.0f}%"
 
         tema_pregunta = ''.join(re.findall(r'\d+', archivo_seleccionado))
-        username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
+        user_id = str(event.sender_id)
         puntuacion_texto = f"{puntuacion:.0f}%"
         clave_respuesta = (tema_pregunta, numero_pregunta, puntuacion_texto)
-        guardar_csv(username, [clave_respuesta])
+        guardar_csv(user_id, [clave_respuesta])
 
-
-        if username not in respuestas_de_usuarios:
-            respuestas_de_usuarios[username] = {}
+        if user_id not in respuestas_de_usuarios:
+            respuestas_de_usuarios[user_id] = {}
         clave_respuesta = (tema_pregunta, numero_pregunta)
         
-        if clave_respuesta not in respuestas_de_usuarios[username]:
-            respuestas_de_usuarios[username][clave_respuesta] = []
+        if clave_respuesta not in respuestas_de_usuarios[user_id]:
+            respuestas_de_usuarios[user_id][clave_respuesta] = []
         
-        respuestas_de_usuarios[username][clave_respuesta].append(f"{puntuacion:.0f}%")
+        respuestas_de_usuarios[user_id][clave_respuesta].append(f"{puntuacion:.0f}%")
 
         selecciones_pregunta[archivo_seleccionado][int(numero_pregunta) - 1] = [False] * len(opciones)
 
@@ -229,16 +223,14 @@ async def callback_query_handler(event):
 
         await event.edit(f'{texto_pregunta}\n\n{texto_opciones}', buttons=buttons)
 
-
-
     elif data == 'start':
         await start(event)  # Reutilizar la función de inicio
 
-def obtener_estado_pregunta(username, archivo, numero_pregunta):
+def obtener_estado_pregunta(user_id, archivo, numero_pregunta):
     tema_pregunta = ''.join(re.findall(r'\d+', archivo))
     clave_respuesta = (tema_pregunta, str(numero_pregunta))
-    if username in respuestas_de_usuarios and clave_respuesta in respuestas_de_usuarios[username]:
-        puntuaciones = respuestas_de_usuarios[username][clave_respuesta]
+    if user_id in respuestas_de_usuarios and clave_respuesta in respuestas_de_usuarios[user_id]:
+        puntuaciones = respuestas_de_usuarios[user_id][clave_respuesta]
         if any(p == "100%" for p in puntuaciones):
             return " ✅"
         return " ❌"
@@ -260,6 +252,4 @@ def generar_botones_pregunta(selecciones, num_pregunta, archivo):
 
 client.start()
 client.run_until_disconnected()
-
-
 client.disconnect()

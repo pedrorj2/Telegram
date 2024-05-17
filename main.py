@@ -92,7 +92,8 @@ async def ver_datos(event):
     username = event.sender.username if event.sender.username else f"user_{event.sender_id}"
     if username in respuestas_de_usuarios:
         # Ordenar las claves (tema y pregunta) antes de imprimir los resultados
-        claves_ordenadas = sorted(respuestas_de_usuarios[username].keys(), key=lambda x: (int(x[0]), int(x[1])))
+        claves_ordenadas = sorted(respuestas_de_usuarios[username].keys(), key=lambda x: (x[0], x[1]))
+
         
         respuesta_texto = "Datos almacenados:\n"
         for clave in claves_ordenadas:
@@ -100,8 +101,6 @@ async def ver_datos(event):
             # Aplicar el formato sin decimales a todas las puntuaciones
             puntuaciones_formateadas = [f"{float(p.replace('%', '')):.0f}%" for p in puntuaciones]
             respuesta_texto += f"Tema {clave[0]}, Pregunta {clave[1]}: {', '.join(puntuaciones_formateadas)}\n"
-
-
         
         await event.respond(respuesta_texto)
     else:

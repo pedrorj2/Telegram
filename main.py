@@ -12,7 +12,7 @@ import csv
 # No es público por seguridad, sólo contiene estos tres datos de a continuación:
 # api_id = ' '
 # api_hash = ' '
-# bot_token = ''
+# bot_token = ' '
 
 
 # Iniciar el cliente de Telegram

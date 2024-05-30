@@ -4,12 +4,9 @@
 > [!NOTE]
 > - 🗂️ This repository contains the progress and code of the [IE24.1401 Educational Innovation Project](https://innovacioneducativa.upm.es/proyectos-ie/informacion?anyo=2023-2024&id=1160)
 > 
-> - 🎯 Objective: Allow students to perform self-assessment activities in a more autonomous and approachable way.
+> - 🎯 Objective: Enable students to perform self-assessment activities in a more autonomous and approachable way, using gamification techniques. By incorporating elements of game design, such as rewards, challenges, and progress tracking, we aim to make self-assessment more engaging and enjoyable for students.
 >   
 > This `README.md` is made for those who are not even familiar with `Python`, so they can set up their bot by themselves.
-
-> [!CAUTION]
-> This `test-bdd-metrics` branch is for internal test with the new metrics functions.
 
 ### <ins>Documentation</ins>
 
@@ -35,7 +32,7 @@ If installed, it will return the version (it is recommended to use the same or a
  <br>
 
 > [!CAUTION]
-> If not installed, go to https://www.python.org/downloads and install it. This already include `pip` since `Python 3.4`.
+> If not installed, go to https://www.python.org/downloads. This already include `pip` since `Python 3.4`.
 
 We also need to install `Telethon` module, we install that with `pip` by entering in the terminal/PowerShell:
 ```bash

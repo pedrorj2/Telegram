@@ -5,6 +5,10 @@
 # config.py
 *config.py
 
+# respuestas.csv
+*respuestas.csv
+
+
 # resultados
 *respuestas.csv
 
@@ -13,12 +17,10 @@
 ############# Useful .gitignore #############
 #############################################
 
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
 
 # C extensions
 *.so

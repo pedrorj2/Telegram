@@ -51,13 +51,11 @@ def listar_archivos_preguntas(prefijo):
     archivos.sort()
     return archivos
 
-
 def guardar_csv(user_id, datos, archivo='respuestas.csv'):
     with open(archivo, 'a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         for dato in datos:
             writer.writerow([user_id, *dato, datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
-
 
 def cargar_csv(archivo='respuestas.csv'):
     try:
@@ -90,18 +88,19 @@ async def start(event):
 async def ver_datos(event):
     user_id = str(event.sender_id)
     if user_id in respuestas_de_usuarios:
+
         claves_ordenadas = sorted(respuestas_de_usuarios[user_id].keys(), key=lambda x: (x[0], x[1]))
 
         respuesta_texto = "Datos almacenados:\n"
         for clave in claves_ordenadas:
             puntuaciones = respuestas_de_usuarios[user_id][clave]
+
             puntuaciones_formateadas = [f"{float(p.replace('%', '')):.0f}%" for p in puntuaciones]
             respuesta_texto += f"Tema {clave[0]}, Pregunta {clave[1]}: {', '.join(puntuaciones_formateadas)}\n"
         
         await event.respond(respuesta_texto)
     else:
         await event.respond("No hay datos almacenados para tu usuario.")
-
 
 @client.on(events.NewMessage(pattern='/ranking'))
 async def ranking(event):

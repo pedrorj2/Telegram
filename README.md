@@ -91,16 +91,18 @@ Once the repository is cloned and opened with Visual Code, we need to fill in th
 # api_id = ' '
 # api_hash = ' '
 # bot_token = ' '
+# lista_profesores = []
 ```
 
 > [!WARNING]
 > You would see a import call like this in my code instead:
 > 
 > ```bash
-> from config import api_id, api_hash, bot_token
+> from config import api_id, api_hash, bot_token, lista_profesores
 > ```
 > This makes possible to get this data from `config.py`, file which is not uploaded to the repository, as indicated on the `.gitignore` file.
 
+`lista_profesores` contains the user_ids of those who are granted access to restricted commands.
 
 `api_id` y `api_hash` are obtained by creating a "Telegram Application" through https://my.telegram.org/apps.
 

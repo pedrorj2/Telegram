@@ -7,7 +7,6 @@
 > - 🎯 Objective: Enable students to perform self-assessment activities in a more autonomous and approachable way, using gamification techniques. By incorporating elements of game design, such as rewards, challenges, and progress tracking, we aim to make self-assessment more engaging and enjoyable for students.
 >   
 > This `README.md` is made for those who are not even familiar with `Python`, so they can set up their bot by themselves.
-<br>
 
 ### <ins>Documentation</ins>
 

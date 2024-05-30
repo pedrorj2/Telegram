@@ -114,7 +114,7 @@ async def ranking(event):
         except FileNotFoundError:
             await event.respond("No hay datos de ranking disponibles.")
     else:
-        await event.respond('No tienes permiso para ejecutar este comando.')
+        await event.respond('No tienes permiso para ejecutar este comando. Ahora sólo está disponible para profesores.')
 
 @client.on(events.NewMessage(pattern='/media'))
 async def media(event):
@@ -128,7 +128,7 @@ async def media(event):
         except FileNotFoundError:
             await event.respond("No hay datos de puntuaciones disponibles.")
     else:
-        await event.respond('No tienes permiso para ejecutar este comando.')
+        await event.respond('No tienes permiso para ejecutar este comando. Ahora sólo está disponible para profesores.')
 
 @client.on(events.NewMessage(pattern='/lista'))
 async def lista(event):
@@ -143,7 +143,7 @@ async def lista(event):
         except FileNotFoundError:
             await event.respond("No hay datos de usuarios disponibles.")
     else:
-        await event.respond('No tienes permiso para ejecutar este comando.')
+        await event.respond('No tienes permiso para ejecutar este comando. Ahora sólo está disponible para profesores.')
 
 @client.on(events.NewMessage(pattern='/reset'))
 async def reset(event):
@@ -151,7 +151,7 @@ async def reset(event):
         buttons = [[Button.inline('Sí', 'confirmar_reset'), Button.inline('No', 'cancelar_reset')]]
         await event.respond('¿Estás seguro de que quieres borrar todas las respuestas? No se podrán recuperar', buttons=buttons)
     else:
-        await event.respond('No tienes permiso para ejecutar este comando.')  
+        await event.respond('No tienes permiso para ejecutar este comando. Sólo está disponible para profesores.')  
 
 
 @client.on(events.CallbackQuery)
@@ -199,7 +199,7 @@ async def callback_query_handler(event):
         await event.edit(f'{texto_pregunta}\n\n{texto_opciones}', buttons=buttons)
 
     elif data.startswith('select_'):
-        _, numero_pregunta, opcion_seleccionada, archivo_seleccionado = data.split('_', 3)
+        _, numero_pregunta, opcion_seleccionada, archivo_seleccionado = data.split('_', 4)
         preguntas = obtener_preguntas_desde_archivo(archivo_seleccionado)
         pregunta, opciones = preguntas[int(numero_pregunta) - 1]
 
@@ -218,7 +218,7 @@ async def callback_query_handler(event):
         await event.edit(f'{texto_pregunta}\n\n{texto_opciones}', buttons=buttons)
 
     if data.startswith('enviar_'):
-        _, numero_pregunta, archivo_seleccionado = data.split('_', 2)
+        _, numero_pregunta, archivo_seleccionado = data.split('_', 3)
         preguntas = obtener_preguntas_desde_archivo(archivo_seleccionado)
         pregunta, opciones = preguntas[int(numero_pregunta) - 1]
         selecciones = selecciones_pregunta[archivo_seleccionado][int(numero_pregunta) - 1]
@@ -283,7 +283,9 @@ async def callback_query_handler(event):
             await event.edit(f'{texto_pregunta}\n\n{texto_opciones}', buttons=buttons)
 
     elif data == 'start':
-        await start(event)
+        archivos = listar_archivos_preguntas('tema_')
+        buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
+        await event.edit('Elige un tema:', buttons=buttons)
 
 def obtener_estado_pregunta(user_id, archivo, numero_pregunta):
     tema_pregunta = ''.join(re.findall(r'\d+', archivo))

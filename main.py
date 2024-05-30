@@ -199,7 +199,7 @@ async def callback_query_handler(event):
         await event.edit(f'{texto_pregunta}\n\n{texto_opciones}', buttons=buttons)
 
     elif data.startswith('select_'):
-        _, numero_pregunta, opcion_seleccionada, archivo_seleccionado = data.split('_', 4)
+        _, numero_pregunta, opcion_seleccionada, archivo_seleccionado = data.split('_', 3)
         preguntas = obtener_preguntas_desde_archivo(archivo_seleccionado)
         pregunta, opciones = preguntas[int(numero_pregunta) - 1]
 
@@ -218,7 +218,7 @@ async def callback_query_handler(event):
         await event.edit(f'{texto_pregunta}\n\n{texto_opciones}', buttons=buttons)
 
     if data.startswith('enviar_'):
-        _, numero_pregunta, archivo_seleccionado = data.split('_', 3)
+        _, numero_pregunta, archivo_seleccionado = data.split('_', 2)
         preguntas = obtener_preguntas_desde_archivo(archivo_seleccionado)
         pregunta, opciones = preguntas[int(numero_pregunta) - 1]
         selecciones = selecciones_pregunta[archivo_seleccionado][int(numero_pregunta) - 1]
@@ -285,7 +285,7 @@ async def callback_query_handler(event):
     elif data == 'start':
         archivos = listar_archivos_preguntas('tema_')
         buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
-        await event.edit('Elige un tema:', buttons=buttons)
+        await event.respond('Elige un tema:', buttons=buttons)
 
 def obtener_estado_pregunta(user_id, archivo, numero_pregunta):
     tema_pregunta = ''.join(re.findall(r'\d+', archivo))

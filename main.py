@@ -285,7 +285,7 @@ async def callback_query_handler(event):
     elif data == 'start':
         archivos = listar_archivos_preguntas('tema_')
         buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
-        await event.respond('Elige un tema:', buttons=buttons)
+        await event.edit('Elige un tema:', buttons=buttons)
 
 def obtener_estado_pregunta(user_id, archivo, numero_pregunta):
     tema_pregunta = ''.join(re.findall(r'\d+', archivo))

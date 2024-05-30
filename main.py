@@ -104,27 +104,46 @@ async def ver_datos(event):
 
 @client.on(events.NewMessage(pattern='/ranking'))
 async def ranking(event):
-    try:
-        ranking = ranking_usuarios()
-        ranking_texto = "Ranking de usuarios:\n"
-        for i, (usuario, puntuacion) in enumerate(ranking, start=1):
-            ranking_texto += f"{i}. {usuario}: {puntuacion} puntos\n"
-        await event.respond(ranking_texto)
-    except FileNotFoundError:
-        await event.respond("No hay datos de ranking disponibles.")
-
+    if event.sender_id in lista_profesores:
+        try:
+            ranking = ranking_usuarios()
+            ranking_texto = "Ranking de usuarios:\n"
+            for i, (usuario, puntuacion) in enumerate(ranking, start=1):
+                ranking_texto += f"{i}. {usuario}: {puntuacion} puntos\n"
+            await event.respond(ranking_texto)
+        except FileNotFoundError:
+            await event.respond("No hay datos de ranking disponibles.")
+    else:
+        await event.respond('No tienes permiso para ejecutar este comando.')
 
 @client.on(events.NewMessage(pattern='/media'))
 async def media(event):
-    try:
-        ranking = ranking_usuarios()
-        puntuaciones = [puntuacion for _, puntuacion in ranking]
-        puntuacion_maxima = 100 * sum(len(obtener_preguntas_desde_archivo(archivo)) for archivo in listar_archivos_preguntas('tema_')) 
-        puntuacion_media = sum(puntuaciones) / len(puntuaciones)
-        await event.respond(f"Media de puntuaciones: {puntuacion_media:.0f} puntos\nPuntuación máxima posible: {puntuacion_maxima:.0f} puntos")
-    except FileNotFoundError:
-        await event.respond("No hay datos de puntuaciones disponibles.")
+    if event.sender_id in lista_profesores:
+        try:
+            ranking = ranking_usuarios()
+            puntuaciones = [puntuacion for _, puntuacion in ranking]
+            puntuacion_maxima = 100 * sum(len(obtener_preguntas_desde_archivo(archivo)) for archivo in listar_archivos_preguntas('tema_'))
+            puntuacion_media = sum(puntuaciones) / len(puntuaciones)
+            await event.respond(f"Media de puntuaciones: {puntuacion_media:.0f} puntos\nPuntuación máxima posible: {puntuacion_maxima:.0f} puntos")
+        except FileNotFoundError:
+            await event.respond("No hay datos de puntuaciones disponibles.")
+    else:
+        await event.respond('No tienes permiso para ejecutar este comando.')
 
+@client.on(events.NewMessage(pattern='/lista'))
+async def lista(event):
+    if event.sender_id in lista_profesores:
+        try:
+            usuarios = lista_usuarios()
+            if usuarios:
+                lista_usuarios_texto = f"Hay {len(usuarios)} usuarios con datos almacenados:\n" + '\n'.join(usuarios)
+                await event.respond(lista_usuarios_texto)
+            else:
+                await event.respond("No hay datos almacenados para ningún usuario.")
+        except FileNotFoundError:
+            await event.respond("No hay datos de usuarios disponibles.")
+    else:
+        await event.respond('No tienes permiso para ejecutar este comando.')
 
 @client.on(events.NewMessage(pattern='/reset'))
 async def reset(event):
@@ -132,19 +151,7 @@ async def reset(event):
         buttons = [[Button.inline('Sí', 'confirmar_reset'), Button.inline('No', 'cancelar_reset')]]
         await event.respond('¿Estás seguro de que quieres borrar todas las respuestas? No se podrán recuperar', buttons=buttons)
     else:
-        await event.respond('No tienes permiso para ejecutar este comando.')   
-
-@client.on(events.NewMessage(pattern='/lista'))
-async def lista(event):
-    try:
-        usuarios = lista_usuarios()
-        if usuarios:
-            lista_usuarios_texto = '\n'.join(usuarios)
-            await event.respond(f"Usuarios con datos almacenados:\n{lista_usuarios_texto}")
-        else:
-            await event.respond("No hay datos almacenados para ningún usuario.")
-    except FileNotFoundError:
-        await event.respond("No hay datos de usuarios disponibles.")
+        await event.respond('No tienes permiso para ejecutar este comando.')  
 
 
 @client.on(events.CallbackQuery)

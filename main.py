@@ -3,7 +3,7 @@ from telethon.tl.custom import Button
 from datetime import datetime
 
 from config import api_id, api_hash, bot_token, lista_profesores
-from metrics import ranking_usuarios
+from metrics import ranking_usuarios, media_intentos, lista_usuarios
 
 import os
 import re
@@ -16,19 +16,16 @@ import csv
 # bot_token = ' '
 # lista_profesores = []
 
-# Iniciar el cliente de Telegram
+
 client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
 
-# Carpeta donde se encuentran los archivos de preguntas
 preguntas_folder = r'Preguntas'
 
-# Diccionario para mantener las selecciones de respuestas
 selecciones_pregunta = {}
 
-# Almacenar las respuestas de un usuario con mejor estructura
 respuestas_de_usuarios = {}
 
-# Función para obtener las preguntas desde el archivo
+
 def obtener_preguntas_desde_archivo(archivo):
     ruta_completa = os.path.join(preguntas_folder, archivo)
     with open(ruta_completa, 'r', encoding='utf-8') as file:
@@ -39,29 +36,29 @@ def obtener_preguntas_desde_archivo(archivo):
 
     for titulo, opciones in preguntas:
         titulo_limpio = titulo.replace(':: ', '').strip()
-        # Transformamos el formato multirespuesta de %positivo% y %negativo%
         opciones = re.sub(r'~%-\d+%', '~', opciones)
         opciones = re.sub(r'~%\d+%', '=', opciones)
-        # Leemos la separación entre respuestas
         opciones = re.findall(r'([=~])(.*?)\s*(?=\n|\Z)', opciones)
-        # Procesamos las respuestas correctas '='
+    
         opciones_procesadas = [(opcion.strip()[0].upper() + opcion.strip()[1:].lower(), tipo == '=') for tipo, opcion in opciones]
         preguntas_procesadas.append((titulo_limpio, opciones_procesadas))
 
     return preguntas_procesadas
 
-# Función para listar los archivos de preguntas disponibles
+
 def listar_archivos_preguntas(prefijo):
     archivos = [f for f in os.listdir(preguntas_folder) if f.startswith(prefijo) and f.endswith('.txt')]
+    archivos.sort()
     return archivos
 
-def guardar_csv(usuario, datos, archivo='respuestas.csv'):
+
+def guardar_csv(user_id, datos, archivo='respuestas.csv'):
     with open(archivo, 'a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
-        # Asegurarse de que 'datos' es una lista de tuplas (tema, pregunta, puntuación)
         for dato in datos:
-            writer.writerow([usuario, *dato, datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
-            
+            writer.writerow([user_id, *dato, datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+
+
 def cargar_csv(archivo='respuestas.csv'):
     try:
         with open(archivo, 'r', newline='', encoding='utf-8') as file:
@@ -79,7 +76,6 @@ def cargar_csv(archivo='respuestas.csv'):
         print("Archivo de resultados no encontrado, iniciando sin datos previos.")
 
 
-# Cargar los datos inmediatamente al iniciar el bot
 cargar_csv()
 
 
@@ -88,82 +84,75 @@ async def start(event):
     archivos = listar_archivos_preguntas('tema_')
     buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
     await event.respond('Elige un tema:', buttons=buttons)
-    
-
-@client.on(events.NewMessage(pattern='/ranking'))
-async def ranking(event):
-    ranking = ranking_usuarios()
-    ranking_texto = "Ranking de usuarios:\n"
-    for i, (usuario, puntuacion) in enumerate(ranking, start=1):
-        ranking_texto += f"{i}. {usuario}: {puntuacion} puntos\n"
-    await event.respond(ranking_texto)
 
 
-@client.on(events.NewMessage(pattern='/media'))
-async def media(event):
-    ranking = ranking_usuarios()
-    puntuaciones = [puntuacion for _, puntuacion in ranking]
-    # la puntuación máxima quiero que sea el 100 multiplicado por el numero de preguntas de todos los temas (archivos) juntos
-    puntuacion_maxima = 100 * sum(len(obtener_preguntas_desde_archivo(archivo)) for archivo in listar_archivos_preguntas('tema_')) 
-    puntuacion_media = sum(puntuaciones) / len(puntuaciones)
-    await event.respond(f"Media de puntuaciones: {puntuacion_media:.0f} puntos\nPuntuación máxima posible: {puntuacion_maxima:.0f} puntos")
-
-
-@client.on(events.NewMessage(pattern='/reset'))
-async def reset(event):
-    # Verificar si el usuario que ejecuta el comando es el profesor autorizado
-    if event.sender.id in lista_profesores:
-        buttons = [[Button.inline('Sí', 'confirmar_reset'), Button.inline('No', 'cancelar_reset')]]
-        await event.respond('¿Estás seguro de que quieres borrar todas las respuestas? No se podrán recuperar', buttons=buttons)
-    else:
-        print(event.sender.id)
-        await event.respond('No tienes permiso para ejecutar este comando.')   
-
-
-@client.on(events.NewMessage(pattern='/lista'))
-async def lista(event):
-    if respuestas_de_usuarios:
-        lista_usuarios = '\n'.join(respuestas_de_usuarios.keys())
-        await event.respond(f"Usuarios con datos almacenados:\n{lista_usuarios}")
-    else:
-        await event.respond("No hay datos almacenados para ningún usuario.")
-
-
-@client.on(events.NewMessage(pattern='/datos'))
+@client.on(events.NewMessage(pattern='/mis_respuestas'))
 async def ver_datos(event):
-    user_id = event.sender.id if event.sender.id else f"user_{event.sender_id}"
+    user_id = str(event.sender_id)
     if user_id in respuestas_de_usuarios:
-        # Ordenar las claves (tema y pregunta) antes de imprimir los resultados
-        claves_ordenadas = sorted(respuestas_de_usuarios[user_id].keys(), key=lambda x: (int(x[0]), int(x[1])))
-        
+        claves_ordenadas = sorted(respuestas_de_usuarios[user_id].keys(), key=lambda x: (x[0], x[1]))
+
         respuesta_texto = "Datos almacenados:\n"
         for clave in claves_ordenadas:
             puntuaciones = respuestas_de_usuarios[user_id][clave]
-            # Aplicar el formato sin decimales a todas las puntuaciones
             puntuaciones_formateadas = [f"{float(p.replace('%', '')):.0f}%" for p in puntuaciones]
             respuesta_texto += f"Tema {clave[0]}, Pregunta {clave[1]}: {', '.join(puntuaciones_formateadas)}\n"
-
+        
         await event.respond(respuesta_texto)
     else:
         await event.respond("No hay datos almacenados para tu usuario.")
 
 
+@client.on(events.NewMessage(pattern='/ranking'))
+async def ranking(event):
+    try:
+        ranking = ranking_usuarios()
+        ranking_texto = "Ranking de usuarios:\n"
+        for i, (usuario, puntuacion) in enumerate(ranking, start=1):
+            ranking_texto += f"{i}. {usuario}: {puntuacion} puntos\n"
+        await event.respond(ranking_texto)
+    except FileNotFoundError:
+        await event.respond("No hay datos de ranking disponibles.")
 
-    
 
-###########################################################################################
-################################    EVENTOS DE MENSAJES    ################################
-###########################################################################################     
+@client.on(events.NewMessage(pattern='/media'))
+async def media(event):
+    try:
+        ranking = ranking_usuarios()
+        puntuaciones = [puntuacion for _, puntuacion in ranking]
+        puntuacion_maxima = 100 * sum(len(obtener_preguntas_desde_archivo(archivo)) for archivo in listar_archivos_preguntas('tema_')) 
+        puntuacion_media = sum(puntuaciones) / len(puntuaciones)
+        await event.respond(f"Media de puntuaciones: {puntuacion_media:.0f} puntos\nPuntuación máxima posible: {puntuacion_maxima:.0f} puntos")
+    except FileNotFoundError:
+        await event.respond("No hay datos de puntuaciones disponibles.")
 
+
+@client.on(events.NewMessage(pattern='/reset'))
+async def reset(event):
+    if event.sender_id in lista_profesores:
+        buttons = [[Button.inline('Sí', 'confirmar_reset'), Button.inline('No', 'cancelar_reset')]]
+        await event.respond('¿Estás seguro de que quieres borrar todas las respuestas? No se podrán recuperar', buttons=buttons)
+    else:
+        await event.respond('No tienes permiso para ejecutar este comando.')   
+
+@client.on(events.NewMessage(pattern='/lista'))
+async def lista(event):
+    try:
+        usuarios = lista_usuarios()
+        if usuarios:
+            lista_usuarios_texto = '\n'.join(usuarios)
+            await event.respond(f"Usuarios con datos almacenados:\n{lista_usuarios_texto}")
+        else:
+            await event.respond("No hay datos almacenados para ningún usuario.")
+    except FileNotFoundError:
+        await event.respond("No hay datos de usuarios disponibles.")
 
 
 @client.on(events.CallbackQuery)
 async def callback_query_handler(event):
     data = event.data.decode()
 
-
-    # Verificar si el usuario tiene permiso para borrar los datos
-    if event.sender.id in lista_profesores:
+    if event.sender_id in lista_profesores:
         if event.data == b'confirmar_reset':
             if os.path.exists('respuestas.csv'):
                 os.remove('respuestas.csv')
@@ -177,7 +166,7 @@ async def callback_query_handler(event):
         preguntas = obtener_preguntas_desde_archivo(archivo_seleccionado)
         selecciones_pregunta[archivo_seleccionado] = [[False] * len(opciones) for _, opciones in preguntas]
 
-        user_id = event.sender.id if event.sender.id else f"user_{event.sender_id}"
+        user_id = str(event.sender_id)
         buttons = []
         for i, _ in enumerate(preguntas, start=1):
             estado = obtener_estado_pregunta(user_id, archivo_seleccionado, i)
@@ -186,15 +175,12 @@ async def callback_query_handler(event):
         buttons.append([Button.inline('🏠 Volver al inicio', 'start')])
         await event.edit('Elige una pregunta:', buttons=buttons)
 
-
     if data.startswith('preg_'):
         _, numero_pregunta, archivo_seleccionado = data.split('_', 2)
         preguntas = obtener_preguntas_desde_archivo(archivo_seleccionado)
         pregunta, opciones = preguntas[int(numero_pregunta) - 1]
 
-        # Calcular cuántas respuestas correctas hay
         total_correctas = sum(1 for _, correcta in opciones if correcta)
-        # Formular la pregunta adecuadamente según el número de respuestas correctas
         instruccion_pregunta = "la única opción correcta:" if total_correctas == 1 else f"las {total_correctas} respuestas correctas:"
 
         texto_pregunta = f"{pregunta}\n\nSeleccione {instruccion_pregunta}"
@@ -211,11 +197,9 @@ async def callback_query_handler(event):
         preguntas = obtener_preguntas_desde_archivo(archivo_seleccionado)
         pregunta, opciones = preguntas[int(numero_pregunta) - 1]
 
-        # Actualizar las selecciones
         selecciones = selecciones_pregunta[archivo_seleccionado][int(numero_pregunta) - 1]
         selecciones[int(opcion_seleccionada)] = not selecciones[int(opcion_seleccionada)]
 
-        # Mantener la instrucción original basada en la cantidad de respuestas correctas
         total_correctas = sum(1 for _, correcta in opciones if correcta)
         instruccion_pregunta = "la única opción correcta:" if total_correctas == 1 else f"las {total_correctas} respuestas correctas:"
 
@@ -233,18 +217,15 @@ async def callback_query_handler(event):
         pregunta, opciones = preguntas[int(numero_pregunta) - 1]
         selecciones = selecciones_pregunta[archivo_seleccionado][int(numero_pregunta) - 1]
 
-        # Revisar si se ha hecho alguna selección
         if not any(selecciones):
-            # Si no se ha seleccionado nada, informa al usuario y no hagas nada más
             await event.answer("Por favor, selecciona al menos una opción antes de enviar las respuestas.", alert=True)
             return
 
-        # Comprobación de respuestas: verifica si alguna opción incorrecta fue seleccionada
         seleccion_incorrecta = any(seleccion and not correcta for seleccion, (_, correcta) in zip(selecciones, opciones))
         total_correctas = sum(1 for _, correcta in opciones if correcta)
 
         if seleccion_incorrecta:
-            puntuacion = 0  # Si alguna incorrecta es seleccionada, la puntuación es cero
+            puntuacion = 0
         else:
             correctas_seleccionadas = sum(seleccion for seleccion, (_, correcta) in zip(selecciones, opciones) if correcta)
             puntuacion = (correctas_seleccionadas / total_correctas) * 100 if total_correctas > 0 else 0
@@ -254,15 +235,16 @@ async def callback_query_handler(event):
             if selecciones[i]:
                 resultado += f"{chr(65 + i)} - {'Correcta' if correcta else 'Incorrecta'}\n"
 
-        if puntuacion == 0:
+        if puntuacion == 0 and total_correctas > 1:
+            resultado += f"\nPuntuación: {puntuacion:.0f}%\n\nUna sola respuesta incorrecta anula el resto de respuestas."
+        else:
             resultado += f"\nPuntuación: {puntuacion:.0f}%"
 
         tema_pregunta = ''.join(re.findall(r'\d+', archivo_seleccionado))
-        user_id = event.sender.id if event.sender.id else f"user_{event.sender_id}"
+        user_id = str(event.sender_id)
         puntuacion_texto = f"{puntuacion:.0f}%"
         clave_respuesta = (tema_pregunta, numero_pregunta, puntuacion_texto)
         guardar_csv(user_id, [clave_respuesta])
-
 
         if user_id not in respuestas_de_usuarios:
             respuestas_de_usuarios[user_id] = {}
@@ -275,11 +257,8 @@ async def callback_query_handler(event):
 
         selecciones_pregunta[archivo_seleccionado][int(numero_pregunta) - 1] = [False] * len(opciones)
 
-        # Enviar alerta con el resultado
         await event.answer(resultado, alert=True)
 
-        # Restablecer la visualización de las opciones
-        # Quiero que si la respuesta es correcta, me devuleva al menú de las preguntas de ese mismo tema, y si es incorrecta, se mantenga en la pregunta que estoy respondiendo pero restableciendo las seleecionadas
         if puntuacion == 100:
             buttons = []
             for i, _ in enumerate(preguntas, start=1):
@@ -296,12 +275,9 @@ async def callback_query_handler(event):
             buttons.append([Button.inline('📤 Enviar respuesta', f'enviar_{numero_pregunta}_{archivo_seleccionado}')])
             buttons.append([Button.inline('🔙 Volver al tema', f'archivo_{archivo_seleccionado}')])
             await event.edit(f'{texto_pregunta}\n\n{texto_opciones}', buttons=buttons)
-        
-    
-
 
     elif data == 'start':
-        await start(event)  # Reutilizar la función de inicio
+        await start(event)
 
 def obtener_estado_pregunta(user_id, archivo, numero_pregunta):
     tema_pregunta = ''.join(re.findall(r'\d+', archivo))
@@ -329,6 +305,4 @@ def generar_botones_pregunta(selecciones, num_pregunta, archivo):
 
 client.start()
 client.run_until_disconnected()
-
-
 client.disconnect()

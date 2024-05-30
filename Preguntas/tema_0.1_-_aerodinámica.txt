@@ -43,9 +43,9 @@
 // Pregunta 6
 :: Aerodynamics. Basic Concepts
 :: The pressure distribution on a flat plate at angle of attack has the following properties {
-~%-100%the lift coefficient is \pi 
-~%50%the pressure at the leading edge is singular of the form \(\frac\{1}\{sqrt(\epsilon)}\)
-~%50%the pressure at the trailing edge goes to zero as \(sqrt(\epsilon)\)
+~%-100%the lift coefficient is π 
+~%50%the pressure at the leading edge is singular of the form 1\sqrt(epsilon))
+~%50%the pressure at the trailing edge goes to zero as sqrt(epsilon))
 }
 
 // Pregunta 7

@@ -61,7 +61,7 @@
 :: The resonance in amplitude of a damped system is reached when {
 ~the frequency of excitation is equal to the undamped natural frequency
 =the module of the amplitude response is maximum
-~the phase angle of the response is \(\frac\{\pi}\{2}\) 
+~the phase angle of the response is π/2
 }
 
 // Pregunta 9

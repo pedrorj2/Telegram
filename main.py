@@ -25,6 +25,15 @@ selecciones_pregunta = {}
 
 respuestas_de_usuarios = {}
 
+def verificar_registro(user_id):
+    if os.path.exists('usuarios.csv'):
+        with open('usuarios.csv', 'r', newline='', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if row[0] == str(user_id):
+                    return True
+    return False
+
 
 def obtener_preguntas_desde_archivo(archivo):
     ruta_completa = os.path.join(preguntas_folder, archivo)
@@ -79,10 +88,51 @@ cargar_csv()
 
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
-    archivos = listar_archivos_preguntas('tema_')
-    buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
-    await event.respond('Elige un tema:', buttons=buttons)
+    user_id = str(event.sender_id)
+    if not verificar_registro(user_id):
+        await registrar_correo(event)
+    else:
+        archivos = listar_archivos_preguntas('tema_')
+        buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
+        await event.respond('Elige un tema:', buttons=buttons)
 
+async def registrar_correo(event):
+    user_id = str(event.sender_id)
+    respuesta = await event.respond("Bienvenido! Para empezar, por favor regístrate introduciendo tu correo (@alumnos.upm.es) de la UPM.")
+    respuestas_de_usuarios[user_id] = {'estado': 'esperando_correo', 'mensaje_id': respuesta.id}
+
+@client.on(events.NewMessage)
+async def message_handler(event):
+    if event.out:
+        return
+
+    user_id = str(event.sender_id)
+    if user_id in respuestas_de_usuarios and respuestas_de_usuarios[user_id]['estado'] == 'esperando_correo':
+        correo = event.text.strip()
+        
+        if re.match(r'^[a-zA-Z0-9_.+-]+@alumnos.upm.es$', correo):
+            usuarios = []
+            if os.path.exists('usuarios.csv'):
+                with open('usuarios.csv', 'r', newline='', encoding='utf-8') as file:
+                    reader = csv.reader(file)
+                    usuarios = list(reader)
+
+            usuarios = [row for row in usuarios if row[0] != user_id]
+            usuarios.append([user_id, correo])
+
+            with open('usuarios.csv', 'w', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+                writer.writerows(usuarios)
+
+            del respuestas_de_usuarios[user_id]
+            await event.respond('Registro completado con éxito.')
+            
+            # Mostrar la selección de temas inmediatamente después del registro
+            archivos = listar_archivos_preguntas('tema_')
+            buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
+            await event.respond('Elige un tema:', buttons=buttons)
+        else:
+            return
 
 @client.on(events.NewMessage(pattern='/mis_respuestas'))
 async def ver_datos(event):

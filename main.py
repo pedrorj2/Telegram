@@ -178,6 +178,11 @@ async def ranking(event):
         for i, (usuario, puntuacion) in enumerate(ranking[:20], start=1):
             if usuario == user_id and correo_usuario:
                 correo_sin_dominio = correo_usuario.replace('@alumnos.upm.es', '')
+
+                # Mensaje especial si el usuario está en primer lugar
+                if i == 1:
+                    ranking_texto = "¡Qué más da el ranking, vas primero!\n\nEsto es un easter egg que dejó en que hizo este bot, saludos! ;)\n\n" + ranking_texto
+
                 ranking_texto += f"{i}: {correo_sin_dominio} - {puntuacion} puntos\n"  # Mostrar el correo del usuario solicitante sin el dominio
             else:
                 ranking_texto += f"{i}: {puntuacion} puntos\n"  # Mostrar puntos para otros usuarios sin identificarlos

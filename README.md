@@ -88,10 +88,10 @@ Once the repository is cloned and opened with Visual Code, we need to fill in th
 
 ```bash
 # Configuración de tu API de Telegram
-# api_id = ' '
-# api_hash = ' '
-# bot_token = ' '
-# lista_profesores = []
+api_id = ' '
+api_hash = ' '
+bot_token = ' '
+lista_profesores = []
 ```
 
 > [!WARNING]

@@ -25,6 +25,15 @@ selecciones_pregunta = {}
 
 respuestas_de_usuarios = {}
 
+def verificar_registro(user_id):
+    if os.path.exists('usuarios.csv'):
+        with open('usuarios.csv', 'r', newline='', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if row[0] == str(user_id):
+                    return True
+    return False
+
 
 def obtener_preguntas_desde_archivo(archivo):
     ruta_completa = os.path.join(preguntas_folder, archivo)
@@ -79,9 +88,54 @@ cargar_csv()
 
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
-    archivos = listar_archivos_preguntas('tema_')
-    buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
-    await event.respond('Elige un tema:', buttons=buttons)
+    user_id = str(event.sender_id)
+    if not verificar_registro(user_id):
+        await registrar_correo(event)
+    else:
+        archivos = listar_archivos_preguntas('tema_')
+        buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
+        await event.respond('Elige un tema:', buttons=buttons)
+
+async def registrar_correo(event):
+    user_id = str(event.sender_id)
+    respuesta = await event.respond("Bienvenido! Para empezar, por favor regístrate introduciendo tu correo (@alumnos.upm.es) de la UPM.")
+    respuestas_de_usuarios[user_id] = {'estado': 'esperando_correo', 'mensaje_id': respuesta.id}
+
+@client.on(events.NewMessage)
+async def message_handler(event):
+    # Ignorar los mensajes que el bot envía a sí mismo
+    if event.out:
+        return
+
+    user_id = str(event.sender_id)
+    
+    # Verificar si el usuario está en el estado de 'esperando_correo' antes de procesar el mensaje
+    if user_id in respuestas_de_usuarios and respuestas_de_usuarios[user_id].get('estado') == 'esperando_correo':
+        correo = event.text.strip()
+        
+        if re.match(r'^[a-zA-Z0-9_.+-]+@alumnos.upm.es$', correo):
+            usuarios = []
+            if os.path.exists('usuarios.csv'):
+                with open('usuarios.csv', 'r', newline='', encoding='utf-8') as file:
+                    reader = csv.reader(file)
+                    usuarios = list(reader)
+
+            usuarios = [row for row in usuarios if row[0] != user_id]
+            usuarios.append([user_id, correo])
+
+            with open('usuarios.csv', 'w', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+                writer.writerows(usuarios)
+
+            del respuestas_de_usuarios[user_id]
+            await event.respond('Registro completado con éxito.')
+            
+            # Mostrar la selección de temas inmediatamente después del registro
+            archivos = listar_archivos_preguntas('tema_')
+            buttons = [[Button.inline(f'{archivo.replace(".txt", "").replace("_", " ").title()}', f'archivo_{archivo}')] for archivo in archivos]
+            await event.respond('Elige un tema:', buttons=buttons)
+
+
 
 
 @client.on(events.NewMessage(pattern='/mis_respuestas'))
@@ -102,6 +156,44 @@ async def ver_datos(event):
     else:
         await event.respond("No hay datos almacenados para tu usuario.")
 
+@client.on(events.NewMessage(pattern='/ranking'))
+async def ranking(event):
+    user_id = str(event.sender_id)
+    correo_usuario = None
+
+    # Buscar el correo del usuario solicitante en usuarios.csv
+    if os.path.exists('usuarios.csv'):
+        with open('usuarios.csv', 'r', newline='', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if row[0] == user_id:
+                    correo_usuario = row[1]
+                    break
+
+    try:
+        ranking = ranking_usuarios()
+        ranking_texto = "Top 20 Ranking de usuarios:\n"
+
+        # Mostrar el ranking, identificando al usuario solicitante con su correo sin el dominio @alumnos.upm.es
+        for i, (usuario, puntuacion) in enumerate(ranking[:20], start=1):
+            if usuario == user_id and correo_usuario:
+                correo_sin_dominio = correo_usuario.replace('@alumnos.upm.es', '')
+                ranking_texto += f"{i}: {correo_sin_dominio} - {puntuacion} puntos\n"  # Mostrar el correo del usuario solicitante sin el dominio
+            else:
+                ranking_texto += f"{i}: {puntuacion} puntos\n"  # Mostrar puntos para otros usuarios sin identificarlos
+
+        # Si el usuario solicitante no está en el Top 20, mostrar su posición completa en el ranking
+        if user_id not in [usuario for usuario, _ in ranking[:20]]:
+            for i, (usuario, puntuacion) in enumerate(ranking, start=1):
+                if usuario == user_id:
+                    ranking_texto += f"\nTu posición en el ranking es {i}:\n {correo_sin_dominio} - {puntuacion} puntos\n"
+                    break
+
+        await event.respond(ranking_texto)
+    except FileNotFoundError:
+        await event.respond("No hay datos de ranking disponibles.")
+
+
 @client.on(events.NewMessage(pattern='/rankingprofesor'))
 async def ranking(event):
     if event.sender_id in lista_profesores:
@@ -116,19 +208,6 @@ async def ranking(event):
     else:
         await event.respond('No tienes permiso para ejecutar este comando. Ahora sólo está disponible para profesores.')
 
-@client.on(events.NewMessage(pattern='/ranking'))
-async def ranking(event):
-    if event.sender_id:
-        try:
-            ranking = ranking_usuarios()
-            ranking_texto = "Ranking de usuarios:\n"
-            for i, (usuario, puntuacion) in enumerate(ranking, start=1):
-                ranking_texto += f"{i}: {puntuacion} puntos\n"
-            await event.respond(ranking_texto)
-        except FileNotFoundError:
-            await event.respond("No hay datos de ranking disponibles.")
-    else:
-        await event.respond('No tienes permiso para ejecutar este comando. Ahora sólo está disponible para profesores.')
 
 
 @client.on(events.NewMessage(pattern='/media'))

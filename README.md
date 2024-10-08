@@ -111,5 +111,16 @@ o do this, we need to create a bot, choose its name, and we will get this `bot_t
 
 With this, we can run our code, and our computer will host the bot's back-end. As long as it is running, our bot will respond to actions. However, if we close Visual Code, the bot will stop working until we restart it.
 
+```bash
+# Admin Commands for Professors
+
+/rankingprofesor  # Full user ranking with scores
+/media            # Average score and max score info
+/lista            # List of all registered users
+/reset            # Confirm and delete all user response data
+/id               # Display your Telegram sender ID
+```
+
+
 
 

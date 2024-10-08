@@ -239,6 +239,12 @@ async def lista(event):
     else:
         await event.respond('No tienes permiso para ejecutar este comando. Ahora sólo está disponible para profesores.')
 
+@client.on(events.NewMessage(pattern='/id'))
+async def send_id(event):
+    user_id = str(event.sender_id)
+    await event.respond(f"Tu ID de usuario es: {user_id}")
+
+
 @client.on(events.NewMessage(pattern='/reset'))
 async def reset(event):
     if event.sender_id in lista_profesores:

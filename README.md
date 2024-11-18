@@ -11,7 +11,7 @@
 ### <ins>Documentation</ins>
 
  - [Telethon Documentation](https://docs.telethon.dev/en/stable/)
- - [Manual and Project Report]([https://www.overleaf.com/read/nvbqkrzspbjp#ad7e05](https://blogs.upm.es/apgamtel/wp-content/uploads/sites/1189/2024/11/PIE24_1401_Telegram_Aeroelasticidad_Manual_v01.pdf))
+ - [Manual and Project Report](https://blogs.upm.es/apgamtel/wp-content/uploads/sites/1189/2024/11/PIE24_1401_Telegram_Aeroelasticidad_Manual_v01.pdf)
 
 <br>
 

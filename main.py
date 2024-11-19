@@ -191,6 +191,8 @@ async def ranking(event):
         if user_id not in [usuario for usuario, _ in ranking[:20]]:
             for i, (usuario, puntuacion) in enumerate(ranking, start=1):
                 if usuario == user_id:
+                    # Obtener usuario de correo si el puesto > 20
+                    correo_sin_dominio = correo_usuario.replace('@alumnos.upm.es', '')
                     ranking_texto += f"\nTu posición en el ranking es {i}:\n {correo_sin_dominio} - {puntuacion} puntos\n"
                     break
 
